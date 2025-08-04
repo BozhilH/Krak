@@ -15,7 +15,9 @@ const {
   SecurityPage,
   SupportPage,
   DepositPage,
-  WithdrawPage
+  WithdrawPage,
+  Footer,
+  AboutUs
 } = Components;
 
 function App() {
