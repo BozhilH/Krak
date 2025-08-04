@@ -29,7 +29,24 @@ import {
   Mail,
   Check,
   AlertTriangle,
-  TrendingUpIcon
+  TrendingUpIcon,
+  Users,
+  MessageSquare,
+  DollarSign,
+  FileText,
+  Activity,
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  Filter,
+  Edit,
+  Trash2,
+  Download,
+  Upload,
+  Lock,
+  Key,
+  Database
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Area, AreaChart } from 'recharts';
 // Search Component
