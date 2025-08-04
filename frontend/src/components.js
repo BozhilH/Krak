@@ -238,7 +238,7 @@ const Dashboard = ({ marketData, loading, setCurrentView, setSelectedPair }) => 
             <div className="space-y-3">
               <button 
                 onClick={() => setCurrentView('trade')}
-                className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
+                className="w-full bg-teal-600 hover:bg-teal-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
               >
                 Buy Crypto
               </button>
