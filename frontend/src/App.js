@@ -138,6 +138,30 @@ function App() {
             marketData={marketData}
           />
         )}
+
+        {currentView === 'profile' && (
+          <ProfileSettings />
+        )}
+
+        {currentView === 'wallet' && (
+          <WalletPage />
+        )}
+
+        {currentView === 'security' && (
+          <SecurityPage />
+        )}
+
+        {currentView === 'support' && (
+          <SupportPage />
+        )}
+
+        {currentView === 'deposit' && (
+          <DepositPage />
+        )}
+
+        {currentView === 'withdraw' && (
+          <WithdrawPage />
+        )}
       </main>
     </div>
   );
