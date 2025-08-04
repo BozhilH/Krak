@@ -521,9 +521,9 @@ const Header = ({ currentView, setCurrentView, setSelectedPair, marketData }) =>
               <div className="flex-shrink-0">
                 <div className="flex items-center">
                   <div className="w-10 h-10 bg-gradient-to-r from-teal-600 to-cyan-600 rounded-lg flex items-center justify-center">
-                    <span className="text-white font-bold text-xl">K</span>
+                    <span className="text-white font-bold text-xl">C</span>
                   </div>
-                  <span className="ml-2 text-xl font-bold text-white">Kraken</span>
+                  <span className="ml-2 text-xl font-bold text-white">CryptoOX</span>
                 </div>
               </div>
             </div>
