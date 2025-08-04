@@ -108,7 +108,7 @@ const Header = ({ currentView, setCurrentView }) => {
                     }}
                     className={`flex items-center w-full px-3 py-2 rounded-md text-base font-medium transition-colors ${
                       currentView === item.id
-                        ? 'bg-purple-600 text-white'
+                        ? 'bg-teal-600 text-white'
                         : 'text-gray-300 hover:bg-gray-700 hover:text-white'
                     }`}
                   >
