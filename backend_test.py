@@ -752,30 +752,52 @@ class BackendTester:
     def run_all_tests(self):
         """Run all backend API tests"""
         print("=" * 80)
-        print("KRAKEN API BACKEND TESTING")
+        print("CRYPTOOX ADMIN PANEL & KRAKEN API BACKEND TESTING")
         print("=" * 80)
         print(f"Backend URL: {BACKEND_URL}")
         print(f"Test Pairs: {', '.join(TEST_PAIRS)}")
+        print(f"Admin Users: {', '.join(ADMIN_USERS.keys())}")
         print("=" * 80)
         
-        tests = [
-            self.test_root_endpoint,
-            self.test_single_ticker,
-            self.test_multiple_tickers,
-            self.test_orderbook,
-            self.test_ohlc,
-            self.test_trades,
-            self.test_assets,
-            self.test_asset_pairs,
-            self.test_market_summary,
-            self.test_error_handling
+        # Admin Panel Tests
+        admin_tests = [
+            ("Admin Authentication", self.test_admin_login),
+            ("Dashboard Stats", self.test_admin_dashboard_stats),
+            ("Client Management", self.test_client_management),
+            ("Support Tickets", self.test_support_ticket_management),
+            ("Transaction Management", self.test_transaction_management),
+            ("Role-Based Access Control", self.test_role_based_access_control)
         ]
         
-        passed = 0
-        total = len(tests)
+        # Kraken API Tests
+        kraken_tests = [
+            ("Root Endpoint", self.test_root_endpoint),
+            ("Single Ticker", self.test_single_ticker),
+            ("Multiple Tickers", self.test_multiple_tickers),
+            ("Order Book", self.test_orderbook),
+            ("OHLC Data", self.test_ohlc),
+            ("Recent Trades", self.test_trades),
+            ("Assets", self.test_assets),
+            ("Asset Pairs", self.test_asset_pairs),
+            ("Market Summary", self.test_market_summary),
+            ("Error Handling", self.test_error_handling)
+        ]
         
-        for test in tests:
-            if test():
+        all_tests = admin_tests + kraken_tests
+        passed = 0
+        total = len(all_tests)
+        
+        print("\n🔐 ADMIN PANEL TESTS:")
+        print("-" * 40)
+        for test_name, test_func in admin_tests:
+            if test_func():
+                passed += 1
+            print("-" * 40)
+            
+        print("\n📈 KRAKEN API TESTS:")
+        print("-" * 40)
+        for test_name, test_func in kraken_tests:
+            if test_func():
                 passed += 1
             print("-" * 40)
             
