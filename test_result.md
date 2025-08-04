@@ -104,6 +104,55 @@
 
 user_problem_statement: "Test the Kraken cryptocurrency exchange clone with navigation, dashboard, trading interface, markets page, portfolio, responsive UI, and real-time API data integration"
 
+backend:
+  - task: "Comprehensive Kraken API integration backend"
+    implemented: false
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Starting implementation of comprehensive backend integration for all Kraken public APIs including ticker, orderbook, OHLC data, trades, and asset information. Will replace direct frontend API calls with proper backend endpoints."
+
+  - task: "Enhanced market data endpoints"
+    implemented: false
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Building enhanced market data endpoints with proper error handling, data transformation, and caching for better performance"
+
+  - task: "Historical data (OHLC) endpoint"
+    implemented: false
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implementing OHLC (candlestick) data endpoint for price charts with different timeframes"
+
+  - task: "Order book data endpoint"
+    implemented: false
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Building real-time order book data endpoint for trading interface"
+
 frontend:
   - task: "Header navigation between Dashboard, Trade, Markets, and Portfolio sections"
     implemented: true
