@@ -221,8 +221,8 @@ const Dashboard = ({ marketData, loading, setCurrentView, setSelectedPair }) => 
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
                   <defs>
                     <linearGradient id="gradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#14b8a6" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                 </AreaChart>
