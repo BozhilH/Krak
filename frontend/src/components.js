@@ -1883,6 +1883,151 @@ const SecurityPage = () => {
   );
 };
 
+// Support Component  
+const SupportPage = () => {
+  const [activeTab, setActiveTab] = useState('help');
+  const [ticketForm, setTicketForm] = useState({
+    subject: '',
+    category: 'technical',
+    message: '',
+    priority: 'medium'
+  });
+
+  const faqItems = [
+    {
+      question: 'How do I deposit cryptocurrency?',
+      answer: 'Navigate to Wallet > Deposit, select your cryptocurrency, and follow the instructions to get your deposit address.'
+    },
+    {
+      question: 'What are the trading fees?',
+      answer: 'Trading fees range from 0.16% to 0.26% depending on your 30-day trading volume and whether you are a maker or taker.'
+    },
+    {
+      question: 'How long do withdrawals take?',
+      answer: 'Cryptocurrency withdrawals typically process within 30 minutes. Fiat withdrawals may take 1-5 business days depending on the method.'
+    },
+    {
+      question: 'Is my account secure?',
+      answer: 'Yes, we use industry-standard security measures including 2FA, cold storage for funds, and regular security audits.'
+    }
+  ];
+
+  const handleSubmitTicket = (e) => {
+    e.preventDefault();
+    console.log('Ticket submitted:', ticketForm);
+    // Here you would submit to backend
+    alert('Support ticket submitted successfully!');
+    setTicketForm({ subject: '', category: 'technical', message: '', priority: 'medium' });
+  };
+
+  return (
+    <div className="p-4 sm:p-6">
+      <div className="bg-gray-800 rounded-lg p-6">
+        <h1 className="text-2xl font-bold mb-6">Support Center</h1>
+
+        {/* Tab Navigation */}
+        <div className="flex space-x-1 mb-6">
+          <button
+            onClick={() => setActiveTab('help')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              activeTab === 'help' ? 'bg-teal-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-700'
+            }`}
+          >
+            Help Center
+          </button>
+          <button
+            onClick={() => setActiveTab('contact')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              activeTab === 'contact' ? 'bg-teal-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-700'
+            }`}
+          >
+            Contact Support
+          </button>
+        </div>
+
+        {activeTab === 'help' && (
+          <div>
+            <h3 className="text-lg font-semibold text-white mb-4">Frequently Asked Questions</h3>
+            <div className="space-y-4">
+              {faqItems.map((item, index) => (
+                <div key={index} className="bg-gray-700 rounded-lg p-4">
+                  <h4 className="font-medium text-white mb-2">{item.question}</h4>
+                  <p className="text-gray-300 text-sm">{item.answer}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'contact' && (
+          <form onSubmit={handleSubmitTicket} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Subject</label>
+              <input
+                type="text"
+                value={ticketForm.subject}
+                onChange={(e) => setTicketForm(prev => ({ ...prev, subject: e.target.value }))}
+                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Category</label>
+                <select
+                  value={ticketForm.category}
+                  onChange={(e) => setTicketForm(prev => ({ ...prev, category: e.target.value }))}
+                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                >
+                  <option value="technical">Technical Issue</option>
+                  <option value="trading">Trading Question</option>
+                  <option value="account">Account Issue</option>
+                  <option value="security">Security Concern</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Priority</label>
+                <select
+                  value={ticketForm.priority}
+                  onChange={(e) => setTicketForm(prev => ({ ...prev, priority: e.target.value }))}
+                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Message</label>
+              <textarea
+                value={ticketForm.message}
+                onChange={(e) => setTicketForm(prev => ({ ...prev, message: e.target.value }))}
+                rows={6}
+                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                placeholder="Please describe your issue in detail..."
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+            >
+              Submit Ticket
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // Deposit Component
 const DepositPage = () => {
   const [selectedAsset, setSelectedAsset] = useState('BTC');
