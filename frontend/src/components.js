@@ -49,6 +49,360 @@ import {
   Database
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Area, AreaChart } from 'recharts';
+// Admin Login Component
+const AdminLogin = ({ onLogin }) => {
+  const [loginData, setLoginData] = useState({
+    username: '',
+    password: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const response = await fetch(`${backendUrl}/api/admin/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(loginData)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem('admin_token', data.access_token);
+        localStorage.setItem('admin_user', JSON.stringify(data.user));
+        onLogin(data);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.detail || 'Login failed');
+      }
+    } catch (error) {
+      setError('Network error. Please try again.');
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md">
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-gradient-to-r from-teal-600 to-cyan-600 rounded-lg flex items-center justify-center mx-auto mb-4">
+            <span className="text-white font-bold text-2xl">C</span>
+          </div>
+          <h1 className="text-2xl font-bold text-white">CryptoOX Admin</h1>
+          <p className="text-gray-400">Sign in to admin panel</p>
+        </div>
+
+        {error && (
+          <div className="bg-red-600/20 border border-red-600/30 rounded p-3 mb-4">
+            <p className="text-red-200 text-sm">{error}</p>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Username</label>
+            <input
+              type="text"
+              value={loginData.username}
+              onChange={(e) => setLoginData(prev => ({ ...prev, username: e.target.value }))}
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              placeholder="Enter your username"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
+            <input
+              type="password"
+              value={loginData.password}
+              onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              placeholder="Enter your password"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white py-2 rounded-lg font-medium transition-colors flex items-center justify-center"
+          >
+            {loading ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin mr-2" />
+                Signing in...
+              </>
+            ) : (
+              'Sign In'
+            )}
+          </button>
+        </form>
+
+        <div className="mt-6 border-t border-gray-700 pt-4">
+          <p className="text-gray-400 text-sm">Demo Accounts:</p>
+          <div className="mt-2 space-y-1 text-xs">
+            <p className="text-gray-300">Admin: <code>admin</code> / <code>admin123</code></p>
+            <p className="text-gray-300">Support: <code>support</code> / <code>support123</code></p>
+            <p className="text-gray-300">KYC Agent: <code>kyc_agent</code> / <code>kyc123</code></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Admin Header Component
+const AdminHeader = ({ user, currentView, setCurrentView, onLogout }) => {
+  return (
+    <header className="bg-gray-800 border-b border-gray-700">
+      <div className="px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="flex items-center">
+                <div className="w-10 h-10 bg-gradient-to-r from-teal-600 to-cyan-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-xl">C</span>
+                </div>
+                <span className="ml-2 text-xl font-bold text-white">CryptoOX Admin</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-gradient-to-r from-teal-600 to-cyan-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-semibold text-sm">
+                  {user.username[0].toUpperCase()}
+                </span>
+              </div>
+              <div>
+                <p className="text-white font-medium">{user.username}</p>
+                <p className="text-gray-400 text-sm capitalize">{user.role}</p>
+              </div>
+            </div>
+            <button
+              onClick={onLogout}
+              className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+};
+
+// Admin Sidebar Component
+const AdminSidebar = ({ user, currentView, setCurrentView }) => {
+  const adminMenuItems = [
+    { id: 'admin-dashboard', label: 'Dashboard', icon: BarChart3, roles: ['admin', 'support', 'kyc'] },
+    { id: 'admin-clients', label: 'Clients', icon: Users, roles: ['admin', 'support', 'kyc'] },
+    { id: 'admin-tickets', label: 'Support Tickets', icon: MessageSquare, roles: ['admin', 'support'] },
+    { id: 'admin-deposits', label: 'Deposits', icon: ArrowDownRight, roles: ['admin'] },
+    { id: 'admin-withdrawals', label: 'Withdrawals', icon: ArrowUpRight, roles: ['admin'] },
+    { id: 'admin-transactions', label: 'All Transactions', icon: Activity, roles: ['admin'] },
+    { id: 'admin-users', label: 'Admin Users', icon: UserCircle, roles: ['admin'] }
+  ];
+
+  const filteredMenuItems = adminMenuItems.filter(item => item.roles.includes(user.role));
+
+  return (
+    <div className="w-64 bg-gray-800 border-r border-gray-700 min-h-screen">
+      <nav className="mt-8 px-4">
+        <div className="space-y-1">
+          {filteredMenuItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setCurrentView(item.id)}
+                className={`flex items-center w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  currentView === item.id
+                    ? 'bg-teal-600 text-white'
+                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                }`}
+              >
+                <Icon className="w-4 h-4 mr-3" />
+                {item.label}
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+    </div>
+  );
+};
+
+// Admin Dashboard Component
+const AdminDashboard = ({ user }) => {
+  const [stats, setStats] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDashboardStats();
+  }, []);
+
+  const fetchDashboardStats = async () => {
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const token = localStorage.getItem('admin_token');
+      
+      const response = await fetch(`${backendUrl}/api/admin/dashboard/stats`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setStats(data);
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+    }
+    setLoading(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-center h-64">
+          <RefreshCw className="w-8 h-8 animate-spin text-gray-400" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
+        <p className="text-gray-400">Welcome back, {user.username}</p>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="bg-gray-800 rounded-lg p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-400 text-sm">Total Clients</p>
+              <p className="text-2xl font-bold text-white">{stats.total_clients?.toLocaleString()}</p>
+              <p className="text-green-400 text-sm">+{stats.new_registrations_today} today</p>
+            </div>
+            <Users className="w-8 h-8 text-teal-400" />
+          </div>
+        </div>
+
+        <div className="bg-gray-800 rounded-lg p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-400 text-sm">Open Tickets</p>
+              <p className="text-2xl font-bold text-white">{stats.open_tickets}</p>
+              <p className="text-blue-400 text-sm">{stats.resolved_tickets_today} resolved today</p>
+            </div>
+            <MessageSquare className="w-8 h-8 text-blue-400" />
+          </div>
+        </div>
+
+        <div className="bg-gray-800 rounded-lg p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-400 text-sm">Pending KYC</p>
+              <p className="text-2xl font-bold text-white">{stats.pending_kyc}</p>
+              <p className="text-yellow-400 text-sm">Requires review</p>
+            </div>
+            <Shield className="w-8 h-8 text-yellow-400" />
+          </div>
+        </div>
+
+        <div className="bg-gray-800 rounded-lg p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-400 text-sm">24h Volume</p>
+              <p className="text-2xl font-bold text-white">${stats.total_volume_24h?.toLocaleString()}</p>
+              <p className="text-green-400 text-sm">+${stats.total_fees_24h?.toLocaleString()} fees</p>
+            </div>
+            <DollarSign className="w-8 h-8 text-green-400" />
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-gray-800 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Pending Transactions</h3>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-3 bg-gray-700 rounded">
+              <div className="flex items-center">
+                <ArrowDownRight className="w-4 h-4 text-green-400 mr-2" />
+                <div>
+                  <p className="text-white font-medium">Deposits</p>
+                  <p className="text-gray-400 text-sm">{stats.pending_deposits} pending</p>
+                </div>
+              </div>
+              <span className="text-yellow-400">Review needed</span>
+            </div>
+            
+            <div className="flex items-center justify-between p-3 bg-gray-700 rounded">
+              <div className="flex items-center">
+                <ArrowUpRight className="w-4 h-4 text-red-400 mr-2" />
+                <div>
+                  <p className="text-white font-medium">Withdrawals</p>
+                  <p className="text-gray-400 text-sm">{stats.pending_withdrawals} pending</p>
+                </div>
+              </div>
+              <span className="text-red-400">Action required</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gray-800 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">System Status</h3>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-gray-300">Trading Engine</span>
+              <span className="flex items-center text-green-400">
+                <CheckCircle className="w-4 h-4 mr-1" />
+                Online
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-300">API Services</span>
+              <span className="flex items-center text-green-400">
+                <CheckCircle className="w-4 h-4 mr-1" />
+                Operational
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-300">KYC System</span>
+              <span className="flex items-center text-yellow-400">
+                <AlertCircle className="w-4 h-4 mr-1" />
+                Maintenance
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-300">Payment Gateway</span>
+              <span className="flex items-center text-green-400">
+                <CheckCircle className="w-4 h-4 mr-1" />
+                Connected
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Search Component
 const SearchDropdown = ({ isOpen, onClose, setSelectedPair, setCurrentView, marketData }) => {
   const [searchQuery, setSearchQuery] = useState('');
