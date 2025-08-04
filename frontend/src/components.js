@@ -381,7 +381,7 @@ const TradingInterface = ({ selectedPair, marketData, loading, setSelectedPair }
                   <Line
                     type="monotone"
                     dataKey="value"
-                    stroke="#8b5cf6"
+                    stroke="#14b8a6"
                     strokeWidth={2}
                     dot={false}
                   />
