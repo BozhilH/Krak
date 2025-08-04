@@ -810,8 +810,7 @@ async def reject_sumsub_applicant(
 @api_router.post("/admin/sumsub/applicants/{applicant_id}/request-info", dependencies=[Depends(verify_admin)])
 async def request_additional_info(
     applicant_id: str,
-    requested_documents: List[str],
-    comment: Optional[str] = None
+    request_data: SumSubRequestInfo
 ):
     """Request additional information from applicant"""
     try:
@@ -819,8 +818,8 @@ async def request_additional_info(
         result = {
             "applicant_id": applicant_id,
             "status": "on_hold",
-            "requested_documents": requested_documents,
-            "comment": comment,
+            "requested_documents": request_data.requested_documents,
+            "comment": request_data.comment,
             "requested_at": datetime.utcnow().isoformat(),
             "requested_by": "admin",  # Would be extracted from JWT token
             "message": "Additional information requested successfully"
