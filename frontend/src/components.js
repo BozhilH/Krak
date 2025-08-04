@@ -4551,7 +4551,12 @@ const Components = {
   AdminSidebar,
   AdminDashboard,
   AdminClients,
-  AdminTickets
+  AdminTickets,
+  AdminKYCDashboard,
+  AdminKYCApplicants,
+  AdminKYCApplicantDetail,
+  ManualKYCManagement,
+  AdminKYCManagement
 };
 
 export default Components;
