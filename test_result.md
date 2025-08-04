@@ -517,7 +517,13 @@ metadata:
         comment: "✅ IMPLEMENTATION CONFIRMED: WithdrawPage component fully implemented in components.js (lines 2153-2433) with ALL 4 REQUIRED FIAT WITHDRAWAL METHODS: 1) SEPA Instant (€0.35 fee, instant transfer), 2) EasyPay (2.5% fee, instant), 3) Bank Deposit ($15 fee, 1-3 days), 4) Credit/Debit Card (3.99% fee, instant). Each method includes proper fee structure, time estimates, and min/max limits. Comprehensive form validation and professional UI styling."
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "User menu Profile Settings page"
+    - "User menu Wallet page"
+    - "User menu Security page"
+    - "User menu Support page"
+    - "User menu Deposit page"
+    - "User menu Withdraw page with 4 fiat payment methods"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
