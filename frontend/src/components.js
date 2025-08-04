@@ -311,9 +311,43 @@ const TradingInterface = ({ selectedPair, marketData, loading, setSelectedPair }
   const [side, setSide] = useState('buy');
   const [amount, setAmount] = useState('');
   const [price, setPrice] = useState('');
+  const [chartData, setChartData] = useState([]);
+  const [chartLoading, setChartLoading] = useState(true);
 
   const currentData = marketData[selectedPair];
   const currentPrice = currentData ? parseFloat(currentData.c[0]) : 0;
+
+  useEffect(() => {
+    fetchChartData();
+  }, [selectedPair]);
+
+  const fetchChartData = async () => {
+    try {
+      setChartLoading(true);
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const response = await fetch(`${backendUrl}/api/ohlc/${selectedPair}?interval=60`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Transform OHLC data to simple chart format
+        const transformedData = data.data.slice(-24).map((entry, index) => ({
+          time: new Date(entry.timestamp * 1000).toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          }),
+          value: entry.close
+        }));
+        setChartData(transformedData);
+      } else {
+        // Fallback to mock data
+        setChartData(generateMockChartData(24));
+      }
+    } catch (error) {
+      console.error('Error fetching chart data:', error);
+      setChartData(generateMockChartData(24));
+    }
+    setChartLoading(false);
+  };
 
   return (
     <div className="p-4 sm:p-6">
@@ -368,6 +402,7 @@ const TradingInterface = ({ selectedPair, marketData, loading, setSelectedPair }
                   <button
                     key={timeframe}
                     className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm transition-colors"
+                    onClick={() => fetchChartData()} // For now, just refresh with same data
                   >
                     {timeframe}
                   </button>
@@ -376,19 +411,25 @@ const TradingInterface = ({ selectedPair, marketData, loading, setSelectedPair }
             </div>
             
             <div className="h-96">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={generateMockChartData(50)}>
-                  <Line
-                    type="monotone"
-                    dataKey="value"
-                    stroke="#14b8a6"
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                  <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
-                </LineChart>
-              </ResponsiveContainer>
+              {chartLoading ? (
+                <div className="flex items-center justify-center h-full">
+                  <RefreshCw className="w-8 h-8 animate-spin text-gray-400" />
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={chartData}>
+                    <Line
+                      type="monotone"
+                      dataKey="value"
+                      stroke="#14b8a6"
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                    <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </div>
 
