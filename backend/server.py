@@ -540,6 +540,327 @@ async def get_dashboard_stats():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# Sum-Sub KYC Integration
+@api_router.get("/admin/sumsub/dashboard", dependencies=[Depends(verify_admin)])
+async def get_sumsub_dashboard():
+    """Get Sum-Sub KYC dashboard data"""
+    try:
+        # Mock Sum-Sub integration data - in production, integrate with actual Sum-Sub API
+        dashboard_data = {
+            "total_applications": 245,
+            "pending_review": 23,
+            "approved": 189,
+            "rejected": 33,
+            "on_hold": 15,
+            "avg_processing_time_hours": 4.2,
+            "recent_applications": [
+                {
+                    "applicant_id": "sumsub_app_001",
+                    "external_user_id": "user_12345",
+                    "name": "John Smith",
+                    "email": "john.smith@example.com",
+                    "country": "United States",
+                    "status": "pending_review",
+                    "level": "basic-kyc",
+                    "created_at": "2025-08-04T10:30:00Z",
+                    "documents": ["passport", "selfie"]
+                },
+                {
+                    "applicant_id": "sumsub_app_002", 
+                    "external_user_id": "user_12346",
+                    "name": "Maria Garcia",
+                    "email": "maria.garcia@example.com",
+                    "country": "Spain",
+                    "status": "approved",
+                    "level": "enhanced-kyc",
+                    "created_at": "2025-08-04T09:15:00Z",
+                    "documents": ["drivers_license", "utility_bill", "selfie"]
+                },
+                {
+                    "applicant_id": "sumsub_app_003",
+                    "external_user_id": "user_12347", 
+                    "name": "Chen Wei",
+                    "email": "chen.wei@example.com",
+                    "country": "Singapore",
+                    "status": "on_hold",
+                    "level": "basic-kyc",
+                    "created_at": "2025-08-04T08:45:00Z",
+                    "documents": ["passport"],
+                    "notes": "Additional documentation required"
+                }
+            ],
+            "verification_levels": [
+                {"name": "basic-kyc", "count": 156, "description": "Basic identity verification"},
+                {"name": "enhanced-kyc", "count": 89, "description": "Enhanced due diligence"}
+            ],
+            "country_distribution": {
+                "United States": 67,
+                "United Kingdom": 43,
+                "Germany": 32,
+                "France": 28,
+                "Spain": 25,
+                "Other": 50
+            }
+        }
+        return dashboard_data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/admin/sumsub/applicants", dependencies=[Depends(verify_admin)])
+async def get_sumsub_applicants(
+    status: Optional[str] = None,
+    level: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 50
+):
+    """Get Sum-Sub applicants list with filtering"""
+    try:
+        # Mock applicant data - in production, fetch from Sum-Sub API
+        statuses = ["pending_review", "approved", "rejected", "on_hold", "in_progress"]
+        levels = ["basic-kyc", "enhanced-kyc", "corporate-kyc"]
+        countries = ["United States", "United Kingdom", "Germany", "France", "Spain", "Canada", "Australia"]
+        
+        applicants = []
+        for i in range(25):
+            applicant = {
+                "applicant_id": f"sumsub_app_{i+1:03d}",
+                "external_user_id": f"user_{12345 + i}",
+                "first_name": f"User{i+1}",
+                "last_name": f"Test{i+1}",
+                "email": f"user{i+1}@example.com",
+                "country": countries[i % len(countries)],
+                "status": statuses[i % len(statuses)],
+                "level": levels[i % len(levels)],
+                "created_at": f"2025-08-{(i % 30) + 1:02d}T{(i % 24):02d}:00:00Z",
+                "updated_at": f"2025-08-{(i % 30) + 1:02d}T{(i % 24):02d}:30:00Z",
+                "documents_count": (i % 4) + 1,
+                "risk_score": round(0.1 + (i % 10) * 0.09, 2),
+                "review_result": {
+                    "review_answer": "GREEN" if i % 3 == 0 else "YELLOW" if i % 3 == 1 else "RED",
+                    "reject_labels": ["DOCUMENT_QUALITY"] if i % 5 == 0 else [],
+                    "review_reject_type": None
+                }
+            }
+            
+            # Apply filters
+            if status and applicant["status"] != status:
+                continue
+            if level and applicant["level"] != level:
+                continue
+                
+            applicants.append(applicant)
+        
+        # Pagination
+        total = len(applicants)
+        applicants = applicants[skip:skip+limit]
+        
+        return {
+            "applicants": applicants,
+            "total": total,
+            "skip": skip,
+            "limit": limit
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/admin/sumsub/applicants/{applicant_id}", dependencies=[Depends(verify_admin)])
+async def get_sumsub_applicant_detail(applicant_id: str):
+    """Get detailed Sum-Sub applicant information"""
+    try:
+        # Mock detailed applicant data
+        applicant_detail = {
+            "applicant_id": applicant_id,
+            "external_user_id": "user_12345",
+            "info": {
+                "first_name": "John",
+                "last_name": "Smith", 
+                "middle_name": "Michael",
+                "email": "john.smith@example.com",
+                "phone": "+1-555-123-4567",
+                "date_of_birth": "1990-01-15",
+                "country": "United States",
+                "nationality": "US",
+                "place_of_birth": "New York",
+                "addresses": [
+                    {
+                        "type": "current",
+                        "street": "123 Main Street",
+                        "city": "New York",
+                        "state": "NY",
+                        "postal_code": "10001",
+                        "country": "US"
+                    }
+                ]
+            },
+            "status": "pending_review",
+            "level": "basic-kyc",
+            "created_at": "2025-08-04T10:30:00Z",
+            "updated_at": "2025-08-04T11:15:00Z",
+            "review": {
+                "review_id": "review_001",
+                "review_status": "pending",
+                "review_answer": None,
+                "review_reject_type": None,
+                "reject_labels": [],
+                "client_comment": "Standard KYC verification",
+                "moderator_comment": None,
+                "review_date": None
+            },
+            "documents": [
+                {
+                    "document_id": "doc_001",
+                    "document_type": "PASSPORT",
+                    "country": "US",
+                    "status": "approved",
+                    "image_ids": ["img_001", "img_002"],
+                    "uploaded_at": "2025-08-04T10:31:00Z"
+                },
+                {
+                    "document_id": "doc_002",
+                    "document_type": "SELFIE",
+                    "country": "US", 
+                    "status": "approved",
+                    "image_ids": ["img_003"],
+                    "uploaded_at": "2025-08-04T10:32:00Z"
+                }
+            ],
+            "verification_steps": [
+                {
+                    "step": "document_upload",
+                    "status": "completed",
+                    "completed_at": "2025-08-04T10:32:00Z"
+                },
+                {
+                    "step": "face_matching",
+                    "status": "completed", 
+                    "completed_at": "2025-08-04T10:33:00Z"
+                },
+                {
+                    "step": "manual_review",
+                    "status": "in_progress",
+                    "completed_at": None
+                }
+            ],
+            "risk_assessment": {
+                "overall_score": 0.25,
+                "factors": [
+                    {"factor": "document_quality", "score": 0.95, "status": "pass"},
+                    {"factor": "face_match", "score": 0.89, "status": "pass"},
+                    {"factor": "aml_screening", "score": 0.10, "status": "pass"},
+                    {"factor": "pep_screening", "score": 0.05, "status": "pass"}
+                ]
+            },
+            "aml_results": {
+                "sanctions_match": False,
+                "pep_match": False,
+                "adverse_media": False,
+                "screening_date": "2025-08-04T10:34:00Z"
+            }
+        }
+        
+        return applicant_detail
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/admin/sumsub/applicants/{applicant_id}/approve", dependencies=[Depends(verify_admin_only)])
+async def approve_sumsub_applicant(applicant_id: str):
+    """Approve a Sum-Sub applicant"""
+    try:
+        # In production, this would call Sum-Sub API to approve the applicant
+        result = {
+            "applicant_id": applicant_id,
+            "status": "approved",
+            "approved_at": datetime.utcnow().isoformat(),
+            "approved_by": "admin",  # Would be extracted from JWT token
+            "message": "Applicant approved successfully"
+        }
+        
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/admin/sumsub/applicants/{applicant_id}/reject", dependencies=[Depends(verify_admin_only)])
+async def reject_sumsub_applicant(
+    applicant_id: str,
+    rejection_reason: str,
+    rejection_comment: Optional[str] = None
+):
+    """Reject a Sum-Sub applicant"""
+    try:
+        # In production, this would call Sum-Sub API to reject the applicant
+        result = {
+            "applicant_id": applicant_id,
+            "status": "rejected",
+            "rejected_at": datetime.utcnow().isoformat(),
+            "rejected_by": "admin",  # Would be extracted from JWT token
+            "rejection_reason": rejection_reason,
+            "rejection_comment": rejection_comment,
+            "message": "Applicant rejected successfully"
+        }
+        
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/admin/sumsub/applicants/{applicant_id}/request-info", dependencies=[Depends(verify_admin)])
+async def request_additional_info(
+    applicant_id: str,
+    requested_documents: List[str],
+    comment: Optional[str] = None
+):
+    """Request additional information from applicant"""
+    try:
+        # In production, this would call Sum-Sub API to request additional info
+        result = {
+            "applicant_id": applicant_id,
+            "status": "on_hold",
+            "requested_documents": requested_documents,
+            "comment": comment,
+            "requested_at": datetime.utcnow().isoformat(),
+            "requested_by": "admin",  # Would be extracted from JWT token
+            "message": "Additional information requested successfully"
+        }
+        
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/admin/sumsub/webhook-logs", dependencies=[Depends(verify_admin)])
+async def get_sumsub_webhook_logs(skip: int = 0, limit: int = 50):
+    """Get Sum-Sub webhook logs"""
+    try:
+        # Mock webhook logs data
+        webhook_logs = []
+        event_types = ["applicantCreated", "applicantPending", "applicantReviewed", "applicantOnHold"]
+        
+        for i in range(20):
+            log = {
+                "id": f"webhook_log_{i+1:03d}",
+                "event_type": event_types[i % len(event_types)],
+                "applicant_id": f"sumsub_app_{i+1:03d}",
+                "external_user_id": f"user_{12345 + i}",
+                "status": "processed" if i % 4 != 0 else "failed",
+                "received_at": f"2025-08-04T{10 + (i % 12):02d}:00:00Z",
+                "processed_at": f"2025-08-04T{10 + (i % 12):02d}:00:05Z" if i % 4 != 0 else None,
+                "error_message": "Invalid signature" if i % 4 == 0 else None,
+                "payload_size": 1024 + (i * 50),
+                "retry_count": 0 if i % 4 != 0 else 2
+            }
+            webhook_logs.append(log)
+        
+        # Pagination
+        total = len(webhook_logs)
+        webhook_logs = webhook_logs[skip:skip+limit]
+        
+        return {
+            "logs": webhook_logs,
+            "total": total,
+            "skip": skip,
+            "limit": limit
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Asset Pairs
 @api_router.get("/ticker/{pair}")
 async def get_ticker(pair: str):
