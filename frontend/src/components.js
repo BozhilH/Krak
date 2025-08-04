@@ -520,7 +520,7 @@ const TradingForm = ({
         <button
           onClick={() => setOrderType('limit')}
           className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-            orderType === 'limit' ? 'bg-purple-600 text-white' : 'text-gray-300 hover:text-white'
+            orderType === 'limit' ? 'bg-teal-600 text-white' : 'text-gray-300 hover:text-white'
           }`}
         >
           Limit
