@@ -2727,7 +2727,9 @@ const Components = {
   SecurityPage,
   SupportPage,
   DepositPage,
-  WithdrawPage
+  WithdrawPage,
+  Footer,
+  AboutUs
 };
 
 export default Components;
