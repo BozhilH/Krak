@@ -1851,150 +1851,411 @@ const SecurityPage = () => {
   );
 };
 
-// Support Component
-const SupportPage = () => {
-  const [activeTab, setActiveTab] = useState('help');
-  const [ticketForm, setTicketForm] = useState({
-    subject: '',
-    category: 'technical',
-    message: '',
-    priority: 'medium'
-  });
+// Deposit Component
+const DepositPage = () => {
+  const [selectedAsset, setSelectedAsset] = useState('BTC');
+  const [depositMethod, setDepositMethod] = useState('crypto');
 
-  const faqItems = [
-    {
-      question: 'How do I deposit cryptocurrency?',
-      answer: 'Navigate to Wallet > Deposit, select your cryptocurrency, and follow the instructions to get your deposit address.'
-    },
-    {
-      question: 'What are the trading fees?',
-      answer: 'Trading fees range from 0.16% to 0.26% depending on your 30-day trading volume and whether you are a maker or taker.'
-    },
-    {
-      question: 'How long do withdrawals take?',
-      answer: 'Cryptocurrency withdrawals typically process within 30 minutes. Fiat withdrawals may take 1-5 business days depending on the method.'
-    },
-    {
-      question: 'Is my account secure?',
-      answer: 'Yes, we use industry-standard security measures including 2FA, cold storage for funds, and regular security audits.'
-    }
+  const cryptoAssets = [
+    { symbol: 'BTC', name: 'Bitcoin', network: 'Bitcoin', fee: '0.0005 BTC' },
+    { symbol: 'ETH', name: 'Ethereum', network: 'Ethereum', fee: '0.003 ETH' },
+    { symbol: 'XRP', name: 'XRP', network: 'XRP Ledger', fee: '0.2 XRP' },
+    { symbol: 'ADA', name: 'Cardano', network: 'Cardano', fee: '0.17 ADA' }
   ];
 
-  const handleSubmitTicket = (e) => {
-    e.preventDefault();
-    console.log('Ticket submitted:', ticketForm);
-    // Here you would submit to backend
-    alert('Support ticket submitted successfully!');
-    setTicketForm({ subject: '', category: 'technical', message: '', priority: 'medium' });
-  };
+  const fiatMethods = [
+    { id: 'bank', name: 'Bank Transfer', fee: 'Free', time: '1-3 business days', min: '$10', max: '$100,000' },
+    { id: 'card', name: 'Credit/Debit Card', fee: '3.99%', time: 'Instant', min: '$1', max: '$25,000' },
+    { id: 'sepa', name: 'SEPA Instant', fee: '€0.35', time: 'Instant', min: '€1', max: '€100,000' },
+    { id: 'easypay', name: 'EasyPay', fee: '2.5%', time: 'Instant', min: '$5', max: '$10,000' }
+  ];
 
   return (
     <div className="p-4 sm:p-6">
       <div className="bg-gray-800 rounded-lg p-6">
-        <h1 className="text-2xl font-bold mb-6">Support Center</h1>
+        <h1 className="text-2xl font-bold mb-6">Deposit</h1>
 
-        {/* Tab Navigation */}
+        {/* Deposit Method Selection */}
         <div className="flex space-x-1 mb-6">
           <button
-            onClick={() => setActiveTab('help')}
+            onClick={() => setDepositMethod('crypto')}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              activeTab === 'help' ? 'bg-teal-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              depositMethod === 'crypto' ? 'bg-teal-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-700'
             }`}
           >
-            Help Center
+            Cryptocurrency
           </button>
           <button
-            onClick={() => setActiveTab('contact')}
+            onClick={() => setDepositMethod('fiat')}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              activeTab === 'contact' ? 'bg-teal-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              depositMethod === 'fiat' ? 'bg-teal-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-700'
             }`}
           >
-            Contact Support
+            Fiat Currency
           </button>
         </div>
 
-        {activeTab === 'help' && (
+        {depositMethod === 'crypto' && (
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4">Frequently Asked Questions</h3>
-            <div className="space-y-4">
-              {faqItems.map((item, index) => (
-                <div key={index} className="bg-gray-700 rounded-lg p-4">
-                  <h4 className="font-medium text-white mb-2">{item.question}</h4>
-                  <p className="text-gray-300 text-sm">{item.answer}</p>
+            {/* Asset Selection */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-300 mb-3">Select Cryptocurrency</label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {cryptoAssets.map((asset) => (
+                  <button
+                    key={asset.symbol}
+                    onClick={() => setSelectedAsset(asset.symbol)}
+                    className={`p-4 rounded-lg border text-left transition-colors ${
+                      selectedAsset === asset.symbol
+                        ? 'border-teal-600 bg-teal-600/20 text-white'
+                        : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
+                    }`}
+                  >
+                    <div className="flex items-center">
+                      <div className="w-10 h-10 bg-gradient-to-r from-teal-600 to-cyan-600 rounded-full flex items-center justify-center mr-3">
+                        <span className="text-white font-bold text-sm">{asset.symbol[0]}</span>
+                      </div>
+                      <div>
+                        <p className="font-medium">{asset.name} ({asset.symbol})</p>
+                        <p className="text-sm text-gray-400">Network: {asset.network}</p>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Deposit Address */}
+            <div className="bg-gray-700 rounded-lg p-4">
+              <h3 className="font-semibold text-white mb-3">Deposit Address</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-sm text-gray-400">Network</label>
+                  <p className="text-white">{cryptoAssets.find(a => a.symbol === selectedAsset)?.network}</p>
                 </div>
-              ))}
+                <div>
+                  <label className="text-sm text-gray-400">Address</label>
+                  <div className="flex items-center space-x-2 bg-gray-800 p-3 rounded">
+                    <code className="text-green-400 text-sm flex-1">3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy</code>
+                    <button className="text-teal-400 hover:text-teal-300 text-sm">Copy</button>
+                  </div>
+                </div>
+                <div className="bg-yellow-600/20 border border-yellow-600/30 rounded p-3">
+                  <p className="text-yellow-200 text-sm">
+                    ⚠️ Only send {selectedAsset} to this address. Sending other cryptocurrencies may result in permanent loss.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
-        {activeTab === 'contact' && (
-          <form onSubmit={handleSubmitTicket} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Subject</label>
-              <input
-                type="text"
-                value={ticketForm.subject}
-                onChange={(e) => setTicketForm(prev => ({ ...prev, subject: e.target.value }))}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
-                required
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Category</label>
-                <select
-                  value={ticketForm.category}
-                  onChange={(e) => setTicketForm(prev => ({ ...prev, category: e.target.value }))}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
-                >
-                  <option value="technical">Technical Issue</option>
-                  <option value="trading">Trading Question</option>
-                  <option value="account">Account Issue</option>
-                  <option value="security">Security Concern</option>
-                  <option value="other">Other</option>
-                </select>
+        {depositMethod === 'fiat' && (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-white mb-4">Choose Payment Method</h3>
+            {fiatMethods.map((method) => (
+              <div key={method.id} className="bg-gray-700 rounded-lg p-4 hover:bg-gray-600 transition-colors cursor-pointer">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium text-white">{method.name}</h4>
+                    <p className="text-sm text-gray-400">Fee: {method.fee} • {method.time}</p>
+                    <p className="text-sm text-gray-400">Limits: {method.min} - {method.max}</p>
+                  </div>
+                  <ChevronDown className="w-5 h-5 text-gray-400" />
+                </div>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Priority</label>
-                <select
-                  value={ticketForm.priority}
-                  onChange={(e) => setTicketForm(prev => ({ ...prev, priority: e.target.value }))}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
-                >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                  <option value="urgent">Urgent</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Message</label>
-              <textarea
-                value={ticketForm.message}
-                onChange={(e) => setTicketForm(prev => ({ ...prev, message: e.target.value }))}
-                rows={6}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
-                placeholder="Please describe your issue in detail..."
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
-            >
-              Submit Ticket
-            </button>
-          </form>
+            ))}
+          </div>
         )}
       </div>
     </div>
   );
 };
+
+// Withdraw Component
+const WithdrawPage = () => {
+  const [selectedAsset, setSelectedAsset] = useState('BTC');
+  const [withdrawMethod, setWithdrawMethod] = useState('crypto');
+  const [withdrawForm, setWithdrawForm] = useState({
+    amount: '',
+    address: '',
+    memo: ''
+  });
+
+  const fiatWithdrawMethods = [
+    { 
+      id: 'sepa', 
+      name: 'SEPA Instant', 
+      fee: '€0.35', 
+      time: 'Instant', 
+      min: '€1', 
+      max: '€100,000',
+      description: 'Instant SEPA transfers to EU bank accounts'
+    },
+    { 
+      id: 'easypay', 
+      name: 'EasyPay', 
+      fee: '2.5%', 
+      time: 'Instant', 
+      min: '$5', 
+      max: '$10,000',
+      description: 'Quick withdrawals via EasyPay network'
+    },
+    { 
+      id: 'bank', 
+      name: 'Bank Deposit', 
+      fee: '$15', 
+      time: '1-3 days', 
+      min: '$10', 
+      max: '$100,000',
+      description: 'Direct bank transfer to your account'
+    },
+    { 
+      id: 'card', 
+      name: 'Credit/Debit Card', 
+      fee: '3.99%', 
+      time: 'Instant', 
+      min: '$1', 
+      max: '$25,000',
+      description: 'Withdraw directly to your card'
+    }
+  ];
+
+  const [selectedFiatMethod, setSelectedFiatMethod] = useState('sepa');
+
+  const handleWithdraw = (e) => {
+    e.preventDefault();
+    console.log('Withdraw request:', { selectedAsset, withdrawMethod, withdrawForm, selectedFiatMethod });
+    alert('Withdrawal request submitted successfully!');
+  };
+
+  return (
+    <div className="p-4 sm:p-6">
+      <div className="bg-gray-800 rounded-lg p-6">
+        <h1 className="text-2xl font-bold mb-6">Withdraw</h1>
+
+        {/* Withdraw Method Selection */}
+        <div className="flex space-x-1 mb-6">
+          <button
+            onClick={() => setWithdrawMethod('crypto')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              withdrawMethod === 'crypto' ? 'bg-teal-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-700'
+            }`}
+          >
+            Cryptocurrency
+          </button>
+          <button
+            onClick={() => setWithdrawMethod('fiat')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              withdrawMethod === 'fiat' ? 'bg-teal-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-700'
+            }`}
+          >
+            Fiat Currency
+          </button>
+        </div>
+
+        {withdrawMethod === 'crypto' && (
+          <form onSubmit={handleWithdraw} className="space-y-6">
+            {/* Asset Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-3">Select Cryptocurrency</label>
+              <select
+                value={selectedAsset}
+                onChange={(e) => setSelectedAsset(e.target.value)}
+                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+              >
+                <option value="BTC">Bitcoin (BTC) - Available: 0.5234</option>
+                <option value="ETH">Ethereum (ETH) - Available: 15.2341</option>
+                <option value="XRP">XRP (XRP) - Available: 3500</option>
+                <option value="ADA">Cardano (ADA) - Available: 1250</option>
+              </select>
+            </div>
+
+            {/* Withdrawal Amount */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Amount</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  step="any"
+                  value={withdrawForm.amount}
+                  onChange={(e) => setWithdrawForm(prev => ({ ...prev, amount: e.target.value }))}
+                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 pr-16 text-white"
+                  placeholder="0.00"
+                  required
+                />
+                <div className="absolute right-3 top-2 text-gray-400">{selectedAsset}</div>
+              </div>
+              <p className="text-sm text-gray-400 mt-1">Fee: 0.0005 {selectedAsset}</p>
+            </div>
+
+            {/* Destination Address */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Destination Address</label>
+              <input
+                type="text"
+                value={withdrawForm.address}
+                onChange={(e) => setWithdrawForm(prev => ({ ...prev, address: e.target.value }))}
+                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                placeholder="Enter destination address"
+                required
+              />
+            </div>
+
+            {/* Memo/Tag (optional) */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Memo/Tag (Optional)</label>
+              <input
+                type="text"
+                value={withdrawForm.memo}
+                onChange={(e) => setWithdrawForm(prev => ({ ...prev, memo: e.target.value }))}
+                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                placeholder="Enter memo or destination tag if required"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-medium transition-colors"
+            >
+              Withdraw {selectedAsset}
+            </button>
+          </form>
+        )}
+
+        {withdrawMethod === 'fiat' && (
+          <div className="space-y-6">
+            {/* Fiat Method Selection */}
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-4">Select Withdrawal Method</h3>
+              <div className="space-y-3">
+                {fiatWithdrawMethods.map((method) => (
+                  <button
+                    key={method.id}
+                    onClick={() => setSelectedFiatMethod(method.id)}
+                    className={`w-full p-4 rounded-lg border text-left transition-colors ${
+                      selectedFiatMethod === method.id
+                        ? 'border-teal-600 bg-teal-600/20 text-white'
+                        : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-medium text-lg">{method.name}</h4>
+                        <p className="text-sm text-gray-400">{method.description}</p>
+                        <p className="text-sm text-gray-400 mt-1">
+                          Fee: {method.fee} • {method.time} • {method.min} - {method.max}
+                        </p>
+                      </div>
+                      {selectedFiatMethod === method.id && (
+                        <div className="w-6 h-6 bg-teal-600 rounded-full flex items-center justify-center">
+                          <Check className="w-4 h-4 text-white" />
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Withdrawal Form */}
+            <form onSubmit={handleWithdraw} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Amount (USD)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                  placeholder="0.00"
+                  required
+                />
+              </div>
+
+              {selectedFiatMethod === 'sepa' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">IBAN</label>
+                    <input
+                      type="text"
+                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                      placeholder="DE89 3704 0044 0532 0130 00"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Bank Name</label>
+                    <input
+                      type="text"
+                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                      placeholder="Bank name"
+                      required
+                    />
+                  </div>
+                </>
+              )}
+
+              {selectedFiatMethod === 'bank' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Account Number</label>
+                    <input
+                      type="text"
+                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                      placeholder="Account number"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Routing Number</label>
+                    <input
+                      type="text"
+                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                      placeholder="Routing number"
+                      required
+                    />
+                  </div>
+                </>
+              )}
+
+              {selectedFiatMethod === 'card' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Card Number</label>
+                  <input
+                    type="text"
+                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                    placeholder="**** **** **** 1234"
+                    required
+                  />
+                </div>
+              )}
+
+              {selectedFiatMethod === 'easypay' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">EasyPay ID</label>
+                  <input
+                    type="text"
+                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                    placeholder="Enter your EasyPay ID"
+                    required
+                  />
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-medium transition-colors"
+              >
+                Withdraw via {fiatWithdrawMethods.find(m => m.id === selectedFiatMethod)?.name}
+              </button>
+            </form>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Utility function to generate mock chart data
 const generateMockChartData = (points = 24) => {
   const data = [];
   const basePrice = 45000;
