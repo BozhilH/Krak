@@ -248,16 +248,16 @@ class BackendTester:
             if response.status_code == 200:
                 data = response.json()
                 if isinstance(data, dict) and len(data) > 0:
-                    # Check for common pairs
-                    common_pairs = ["XBTUSD", "ETHUSD", "XRPUSD"]  # Kraken pair codes
+                    # Check for common pairs with Kraken naming conventions
+                    common_pairs = ["XXBTZUSD", "XETHZUSD", "XXRPZUSD", "ADAUSD", "DOTUSD"]  # Actual Kraken pair codes
                     found_pairs = [pair for pair in common_pairs if pair in data]
                     
-                    if len(found_pairs) >= 2:
+                    if len(found_pairs) >= 3:
                         self.log_result("Asset Pairs", True, 
                                       f"Retrieved {len(data)} pairs, found {len(found_pairs)} common ones", response_time)
                         return True
                     else:
-                        self.log_result("Asset Pairs", False, f"Only found {len(found_pairs)} common pairs", response_time)
+                        self.log_result("Asset Pairs", False, f"Only found {len(found_pairs)} common pairs: {found_pairs}", response_time)
                 else:
                     self.log_result("Asset Pairs", False, "No asset pairs data returned", response_time)
             else:
