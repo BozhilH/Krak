@@ -1208,13 +1208,20 @@ class BackendTester:
             ("Error Handling", self.test_error_handling)
         ]
         
-        all_tests = admin_tests + kraken_tests
+        all_tests = admin_tests + sumsub_tests + kraken_tests
         passed = 0
         total = len(all_tests)
         
         print("\n🔐 ADMIN PANEL TESTS:")
         print("-" * 40)
         for test_name, test_func in admin_tests:
+            if test_func():
+                passed += 1
+            print("-" * 40)
+            
+        print("\n🔍 SUM-SUB KYC TESTS:")
+        print("-" * 40)
+        for test_name, test_func in sumsub_tests:
             if test_func():
                 passed += 1
             print("-" * 40)
