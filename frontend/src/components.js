@@ -1013,7 +1013,7 @@ const OrderBook = ({ selectedPair }) => {
 
   useEffect(() => {
     fetchOrderBook();
-    const interval = setInterval(fetchOrderBook, 5000); // Update every 5 seconds
+    const interval = setInterval(fetchOrderBook, 3000); // Update every 3 seconds for real-time data
     return () => clearInterval(interval);
   }, [selectedPair]);
 
