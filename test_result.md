@@ -265,6 +265,18 @@ frontend:
         agent: "testing"
         comment: "✅ PASSED: Header navigation fully functional. All navigation buttons (Dashboard, Trade, Markets, Portfolio) are visible and working correctly. Navigation switches between sections smoothly. Kraken logo and brand visible."
 
+  - task: "Sum-Sub KYC frontend integration with manual/automated workflow"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "✅ COMPLETED: Comprehensive KYC management system implemented in Admin Panel. Added: 1) KYC menu item to AdminSidebar with proper role-based access ['admin', 'support', 'kyc'], 2) AdminKYCManagement component as main router with 4 tabs: KYC Dashboard (Sum-Sub stats), Manual KYC (<€250 transactions), Sum-Sub Integration (automated), All Applicants (comprehensive view), 3) ManualKYCManagement component with mock data for manual verification requests under 250 EUR including document uploads, approval/rejection workflow, and search/filter functionality, 4) Complete routing integration in AdminPanel component for 'admin-kyc' view, 5) All existing Sum-Sub components (AdminKYCDashboard, AdminKYCApplicants, AdminKYCApplicantDetail) properly integrated. System provides clear separation between manual and automated KYC workflows as requested. Ready for backend testing."
+
   - task: "Dashboard with portfolio overview, top movers, and quick actions"
     implemented: true
     working: true
