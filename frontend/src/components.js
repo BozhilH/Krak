@@ -400,6 +400,391 @@ const AdminDashboard = ({ user }) => {
         </div>
       </div>
     </div>
+// Client Management Component
+const AdminClients = ({ user }) => {
+  const [clients, setClients] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    fetchClients();
+  }, []);
+
+  const fetchClients = async () => {
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const token = localStorage.getItem('admin_token');
+      
+      const response = await fetch(`${backendUrl}/api/admin/clients`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setClients(data.clients);
+      }
+    } catch (error) {
+      console.error('Error fetching clients:', error);
+    }
+    setLoading(false);
+  };
+
+  const updateClientKYC = async (clientId, kycStatus) => {
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const token = localStorage.getItem('admin_token');
+      
+      await fetch(`${backendUrl}/api/admin/clients/${clientId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ kyc_status: kycStatus })
+      });
+      
+      fetchClients(); // Refresh the list
+    } catch (error) {
+      console.error('Error updating client:', error);
+    }
+  };
+
+  const filteredClients = clients.filter(client =>
+    client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.last_name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-center h-64">
+          <RefreshCw className="w-8 h-8 animate-spin text-gray-400" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-white mb-2">Client Management</h1>
+        <p className="text-gray-400">Manage client accounts and KYC status</p>
+      </div>
+
+      {/* Search Bar */}
+      <div className="mb-6">
+        <div className="relative">
+          <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search clients by email, name..."
+            className="w-full bg-gray-800 border border-gray-700 rounded-lg pl-10 pr-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
+          />
+        </div>
+      </div>
+
+      {/* Clients Table */}
+      <div className="bg-gray-800 rounded-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-700">
+              <tr>
+                <th className="text-left py-3 px-4 font-medium text-gray-300">Client</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-300">Email</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-300">Country</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-300">KYC Status</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-300">Balance</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-300">Last Activity</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-300">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredClients.map((client) => (
+                <tr key={client.id} className="border-t border-gray-700 hover:bg-gray-700">
+                  <td className="py-4 px-4">
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 bg-gradient-to-r from-teal-600 to-cyan-600 rounded-full flex items-center justify-center mr-3">
+                        <span className="text-white font-semibold text-xs">
+                          {client.first_name[0]}{client.last_name[0]}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="font-medium text-white">{client.first_name} {client.last_name}</p>
+                        <p className="text-sm text-gray-400">ID: {client.id.substring(0, 8)}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-4 px-4 text-gray-300">{client.email}</td>
+                  <td className="py-4 px-4 text-gray-300">{client.country}</td>
+                  <td className="py-4 px-4">
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                      client.kyc_status === 'approved' ? 'bg-green-600 text-white' :
+                      client.kyc_status === 'pending' ? 'bg-yellow-600 text-white' :
+                      client.kyc_status === 'requires_review' ? 'bg-orange-600 text-white' :
+                      'bg-red-600 text-white'
+                    }`}>
+                      {client.kyc_status.replace('_', ' ')}
+                    </span>
+                  </td>
+                  <td className="py-4 px-4 font-medium text-white">${client.total_balance.toLocaleString()}</td>
+                  <td className="py-4 px-4 text-gray-300">
+                    {new Date(client.last_activity).toLocaleDateString()}
+                  </td>
+                  <td className="py-4 px-4">
+                    <div className="flex space-x-2">
+                      {user.role === 'admin' || user.role === 'kyc' ? (
+                        <>
+                          {client.kyc_status === 'pending' && (
+                            <button
+                              onClick={() => updateClientKYC(client.id, 'approved')}
+                              className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded text-xs"
+                            >
+                              Approve
+                            </button>
+                          )}
+                          {client.kyc_status === 'requires_review' && (
+                            <button
+                              onClick={() => updateClientKYC(client.id, 'approved')}
+                              className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs"
+                            >
+                              Review
+                            </button>
+                          )}
+                        </>
+                      ) : null}
+                      <button className="bg-gray-600 hover:bg-gray-700 text-white px-2 py-1 rounded text-xs">
+                        View
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Support Tickets Component
+const AdminTickets = ({ user }) => {
+  const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState('');
+
+  useEffect(() => {
+    fetchTickets();
+  }, [statusFilter]);
+
+  const fetchTickets = async () => {
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const token = localStorage.getItem('admin_token');
+      
+      const url = `${backendUrl}/api/admin/tickets${statusFilter ? `?status=${statusFilter}` : ''}`;
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setTickets(data.tickets);
+      }
+    } catch (error) {
+      console.error('Error fetching tickets:', error);
+    }
+    setLoading(false);
+  };
+
+  const updateTicket = async (ticketId, status) => {
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const token = localStorage.getItem('admin_token');
+      
+      await fetch(`${backendUrl}/api/admin/tickets/${ticketId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status, assigned_to: user.username })
+      });
+      
+      fetchTickets(); // Refresh the list
+    } catch (error) {
+      console.error('Error updating ticket:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-center h-64">
+          <RefreshCw className="w-8 h-8 animate-spin text-gray-400" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-white mb-2">Support Tickets</h1>
+        <p className="text-gray-400">Manage customer support requests</p>
+      </div>
+
+      {/* Filter Buttons */}
+      <div className="mb-6 flex space-x-2">
+        <button
+          onClick={() => setStatusFilter('')}
+          className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+            statusFilter === '' ? 'bg-teal-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+          }`}
+        >
+          All
+        </button>
+        {['open', 'in_progress', 'resolved', 'closed'].map((status) => (
+          <button
+            key={status}
+            onClick={() => setStatusFilter(status)}
+            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors capitalize ${
+              statusFilter === status ? 'bg-teal-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+            }`}
+          >
+            {status.replace('_', ' ')}
+          </button>
+        ))}
+      </div>
+
+      {/* Tickets List */}
+      <div className="space-y-4">
+        {tickets.map((ticket) => (
+          <div key={ticket.id} className="bg-gray-800 rounded-lg p-6">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-2">{ticket.subject}</h3>
+                <div className="flex items-center space-x-4 text-sm text-gray-400">
+                  <span>From: {ticket.client_email}</span>
+                  <span>Category: {ticket.category}</span>
+                  <span>Created: {new Date(ticket.created_at).toLocaleDateString()}</span>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className={`px-2 py-1 rounded text-xs font-medium ${
+                  ticket.priority === 'urgent' ? 'bg-red-600 text-white' :
+                  ticket.priority === 'high' ? 'bg-orange-600 text-white' :
+                  ticket.priority === 'medium' ? 'bg-yellow-600 text-white' :
+                  'bg-gray-600 text-white'
+                }`}>
+                  {ticket.priority}
+                </span>
+                <span className={`px-2 py-1 rounded text-xs font-medium ${
+                  ticket.status === 'open' ? 'bg-green-600 text-white' :
+                  ticket.status === 'in_progress' ? 'bg-blue-600 text-white' :
+                  ticket.status === 'resolved' ? 'bg-purple-600 text-white' :
+                  'bg-gray-600 text-white'
+                }`}>
+                  {ticket.status.replace('_', ' ')}
+                </span>
+              </div>
+            </div>
+
+            <p className="text-gray-300 mb-4">{ticket.message}</p>
+
+            {ticket.assigned_to && (
+              <p className="text-sm text-gray-400 mb-4">
+                Assigned to: <span className="text-teal-400">{ticket.assigned_to}</span>
+              </p>
+            )}
+
+            <div className="flex space-x-2">
+              {ticket.status === 'open' && (
+                <button
+                  onClick={() => updateTicket(ticket.id, 'in_progress')}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
+                >
+                  Start Working
+                </button>
+              )}
+              {ticket.status === 'in_progress' && (
+                <button
+                  onClick={() => updateTicket(ticket.id, 'resolved')}
+                  className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm"
+                >
+                  Mark Resolved
+                </button>
+              )}
+              <button className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm">
+                Add Note
+              </button>
+              <button className="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1 rounded text-sm">
+                Reply
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Admin Main Component
+const AdminPanel = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState(null);
+  const [currentView, setCurrentView] = useState('admin-dashboard');
+
+  useEffect(() => {
+    // Check if user is already logged in
+    const token = localStorage.getItem('admin_token');
+    const userData = localStorage.getItem('admin_user');
+    
+    if (token && userData) {
+      setUser(JSON.parse(userData));
+      setIsLoggedIn(true);
+    }
+  }, []);
+
+  const handleLogin = (loginData) => {
+    setUser(loginData.user);
+    setIsLoggedIn(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('admin_token');
+    localStorage.removeItem('admin_user');
+    setUser(null);
+    setIsLoggedIn(false);
+    setCurrentView('admin-dashboard');
+  };
+
+  if (!isLoggedIn) {
+    return <AdminLogin onLogin={handleLogin} />;
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-900 text-white flex">
+      <AdminSidebar user={user} currentView={currentView} setCurrentView={setCurrentView} />
+      
+      <div className="flex-1 flex flex-col">
+        <AdminHeader user={user} currentView={currentView} setCurrentView={setCurrentView} onLogout={handleLogout} />
+        
+        <main className="flex-1">
+          {currentView === 'admin-dashboard' && <AdminDashboard user={user} />}
+          {currentView === 'admin-clients' && <AdminClients user={user} />}
+          {currentView === 'admin-tickets' && <AdminTickets user={user} />}
+          {/* Add more admin views here */}
+        </main>
+      </div>
+    </div>
   );
 };
 
