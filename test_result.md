@@ -650,16 +650,12 @@ metadata:
 
 test_plan:
   current_focus:
-    - "User menu Profile Settings page"
-    - "User menu Wallet page"
-    - "User menu Security page"
-    - "User menu Support page"
-    - "User menu Deposit page"
-    - "User menu Withdraw page with 4 fiat payment methods"
+    - "Sum-Sub KYC API integration backend endpoints"
+    - "Sum-Sub KYC frontend integration with manual/automated workflow"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
-  admin_panel_testing_complete: true
+  admin_panel_testing_complete: false
 
 agent_communication:
   - agent: "testing"
