@@ -30,7 +30,7 @@ import {
   Check,
   AlertTriangle,
   TrendingUpIcon
-# Add the missing import for recharts after the lucide-react imports
+} from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Area, AreaChart } from 'recharts';
 // Search Component
 const SearchDropdown = ({ isOpen, onClose, setSelectedPair, setCurrentView, marketData }) => {
