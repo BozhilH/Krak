@@ -653,12 +653,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Sum-Sub KYC API integration backend endpoints"
     - "Sum-Sub KYC frontend integration with manual/automated workflow"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
-  admin_panel_testing_complete: false
+  admin_panel_testing_complete: true
 
 agent_communication:
   - agent: "testing"
