@@ -27,6 +27,14 @@ function App() {
   const [marketData, setMarketData] = useState({});
   const [loading, setLoading] = useState(true);
 
+  // Check if URL contains admin route
+  const isAdminRoute = window.location.pathname.includes('/admin') || window.location.hash.includes('admin');
+
+  // If admin route, show admin panel
+  if (isAdminRoute) {
+    return <AdminPanel />;
+  }
+
   useEffect(() => {
     fetchMarketData();
     const interval = setInterval(fetchMarketData, 3000); // Update every 3 seconds for real-time data
