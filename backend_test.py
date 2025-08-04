@@ -454,6 +454,419 @@ class BackendTester:
         
         return success_count == 3
 
+    # ========== SUM-SUB KYC API TESTING METHODS ==========
+    
+    def test_sumsub_dashboard(self):
+        """Test Sum-Sub KYC dashboard endpoint"""
+        if "admin" not in self.admin_tokens:
+            self.log_result("Sum-Sub Dashboard", False, "No admin token available", 0)
+            return False
+            
+        try:
+            headers = {"Authorization": f"Bearer {self.admin_tokens['admin']}"}
+            start_time = time.time()
+            response = self.session.get(f"{BACKEND_URL}/admin/sumsub/dashboard", headers=headers)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = [
+                    "total_applications", "pending_review", "approved", "rejected", 
+                    "on_hold", "avg_processing_time_hours", "recent_applications"
+                ]
+                
+                if all(field in data for field in required_fields):
+                    # Validate data structure
+                    if (isinstance(data["total_applications"], int) and data["total_applications"] > 0 and
+                        isinstance(data["recent_applications"], list) and len(data["recent_applications"]) > 0):
+                        recent_app = data["recent_applications"][0]
+                        app_fields = ["applicant_id", "name", "email", "status", "level"]
+                        
+                        if all(field in recent_app for field in app_fields):
+                            self.log_result("Sum-Sub Dashboard", True, 
+                                          f"Total: {data['total_applications']}, Pending: {data['pending_review']}, "
+                                          f"Approved: {data['approved']}, Recent apps: {len(data['recent_applications'])}", 
+                                          response_time)
+                            return True
+                        else:
+                            missing = [f for f in app_fields if f not in recent_app]
+                            self.log_result("Sum-Sub Dashboard", False, f"Missing recent app fields: {missing}", response_time)
+                    else:
+                        self.log_result("Sum-Sub Dashboard", False, "Invalid data types or values", response_time)
+                else:
+                    missing = [f for f in required_fields if f not in data]
+                    self.log_result("Sum-Sub Dashboard", False, f"Missing dashboard fields: {missing}", response_time)
+            else:
+                self.log_result("Sum-Sub Dashboard", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            self.log_result("Sum-Sub Dashboard", False, f"Exception: {str(e)}", 0)
+        return False
+
+    def test_sumsub_applicants_list(self):
+        """Test Sum-Sub applicants list endpoint with filtering"""
+        success_count = 0
+        
+        # Test get all applicants
+        if "admin" in self.admin_tokens:
+            try:
+                headers = {"Authorization": f"Bearer {self.admin_tokens['admin']}"}
+                start_time = time.time()
+                response = self.session.get(f"{BACKEND_URL}/admin/sumsub/applicants", headers=headers)
+                response_time = time.time() - start_time
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if ("applicants" in data and "total" in data and 
+                        isinstance(data["applicants"], list) and len(data["applicants"]) > 0):
+                        applicant = data["applicants"][0]
+                        required_fields = ["applicant_id", "first_name", "last_name", "email", "status", "level"]
+                        
+                        if all(field in applicant for field in required_fields):
+                            self.log_result("Sum-Sub Applicants List", True, 
+                                          f"Retrieved {len(data['applicants'])} applicants, total: {data['total']}", 
+                                          response_time)
+                            success_count += 1
+                        else:
+                            missing = [f for f in required_fields if f not in applicant]
+                            self.log_result("Sum-Sub Applicants List", False, f"Missing applicant fields: {missing}", response_time)
+                    else:
+                        self.log_result("Sum-Sub Applicants List", False, "Invalid response structure", response_time)
+                else:
+                    self.log_result("Sum-Sub Applicants List", False, f"HTTP {response.status_code}: {response.text}", response_time)
+            except Exception as e:
+                self.log_result("Sum-Sub Applicants List", False, f"Exception: {str(e)}", 0)
+        
+        # Test status filtering
+        if "admin" in self.admin_tokens:
+            try:
+                headers = {"Authorization": f"Bearer {self.admin_tokens['admin']}"}
+                start_time = time.time()
+                response = self.session.get(f"{BACKEND_URL}/admin/sumsub/applicants?status=pending_review", headers=headers)
+                response_time = time.time() - start_time
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if "applicants" in data and isinstance(data["applicants"], list):
+                        # Check if all returned applicants have 'pending_review' status
+                        pending_applicants = [a for a in data["applicants"] if a.get("status") == "pending_review"]
+                        if len(pending_applicants) == len(data["applicants"]):
+                            self.log_result("Sum-Sub Status Filter", True, 
+                                          f"Filtered {len(data['applicants'])} pending_review applicants correctly", response_time)
+                            success_count += 1
+                        else:
+                            self.log_result("Sum-Sub Status Filter", False, 
+                                          f"Filter not working: {len(pending_applicants)}/{len(data['applicants'])} are pending_review", 
+                                          response_time)
+                    else:
+                        self.log_result("Sum-Sub Status Filter", False, "Invalid response structure", response_time)
+                else:
+                    self.log_result("Sum-Sub Status Filter", False, f"HTTP {response.status_code}: {response.text}", response_time)
+            except Exception as e:
+                self.log_result("Sum-Sub Status Filter", False, f"Exception: {str(e)}", 0)
+        
+        # Test level filtering
+        if "admin" in self.admin_tokens:
+            try:
+                headers = {"Authorization": f"Bearer {self.admin_tokens['admin']}"}
+                start_time = time.time()
+                response = self.session.get(f"{BACKEND_URL}/admin/sumsub/applicants?level=basic-kyc", headers=headers)
+                response_time = time.time() - start_time
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if "applicants" in data and isinstance(data["applicants"], list):
+                        # Check if all returned applicants have 'basic-kyc' level
+                        basic_applicants = [a for a in data["applicants"] if a.get("level") == "basic-kyc"]
+                        if len(basic_applicants) == len(data["applicants"]):
+                            self.log_result("Sum-Sub Level Filter", True, 
+                                          f"Filtered {len(data['applicants'])} basic-kyc applicants correctly", response_time)
+                            success_count += 1
+                        else:
+                            self.log_result("Sum-Sub Level Filter", False, 
+                                          f"Filter not working: {len(basic_applicants)}/{len(data['applicants'])} are basic-kyc", 
+                                          response_time)
+                    else:
+                        self.log_result("Sum-Sub Level Filter", False, "Invalid response structure", response_time)
+                else:
+                    self.log_result("Sum-Sub Level Filter", False, f"HTTP {response.status_code}: {response.text}", response_time)
+            except Exception as e:
+                self.log_result("Sum-Sub Level Filter", False, f"Exception: {str(e)}", 0)
+        
+        return success_count == 3
+
+    def test_sumsub_applicant_detail(self):
+        """Test Sum-Sub applicant detail endpoint"""
+        if "admin" not in self.admin_tokens:
+            self.log_result("Sum-Sub Applicant Detail", False, "No admin token available", 0)
+            return False
+            
+        try:
+            headers = {"Authorization": f"Bearer {self.admin_tokens['admin']}"}
+            test_applicant_id = "sumsub_app_001"
+            start_time = time.time()
+            response = self.session.get(f"{BACKEND_URL}/admin/sumsub/applicants/{test_applicant_id}", headers=headers)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = [
+                    "applicant_id", "info", "status", "level", "review", 
+                    "documents", "verification_steps", "risk_assessment"
+                ]
+                
+                if all(field in data for field in required_fields):
+                    # Validate nested structures
+                    info = data["info"]
+                    info_fields = ["first_name", "last_name", "email", "country"]
+                    
+                    if (all(field in info for field in info_fields) and
+                        isinstance(data["documents"], list) and len(data["documents"]) > 0 and
+                        isinstance(data["verification_steps"], list) and len(data["verification_steps"]) > 0):
+                        
+                        self.log_result("Sum-Sub Applicant Detail", True, 
+                                      f"Applicant: {info['first_name']} {info['last_name']}, "
+                                      f"Status: {data['status']}, Documents: {len(data['documents'])}, "
+                                      f"Steps: {len(data['verification_steps'])}", response_time)
+                        return True
+                    else:
+                        self.log_result("Sum-Sub Applicant Detail", False, "Invalid nested structure", response_time)
+                else:
+                    missing = [f for f in required_fields if f not in data]
+                    self.log_result("Sum-Sub Applicant Detail", False, f"Missing fields: {missing}", response_time)
+            else:
+                self.log_result("Sum-Sub Applicant Detail", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            self.log_result("Sum-Sub Applicant Detail", False, f"Exception: {str(e)}", 0)
+        return False
+
+    def test_sumsub_approve_applicant(self):
+        """Test Sum-Sub approve applicant endpoint (admin only)"""
+        if "admin" not in self.admin_tokens:
+            self.log_result("Sum-Sub Approve Applicant", False, "No admin token available", 0)
+            return False
+            
+        try:
+            headers = {"Authorization": f"Bearer {self.admin_tokens['admin']}"}
+            test_applicant_id = "sumsub_app_001"
+            start_time = time.time()
+            response = self.session.post(f"{BACKEND_URL}/admin/sumsub/applicants/{test_applicant_id}/approve", headers=headers)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["applicant_id", "status", "approved_at", "approved_by", "message"]
+                
+                if all(field in data for field in required_fields):
+                    if (data["applicant_id"] == test_applicant_id and 
+                        data["status"] == "approved" and
+                        data["approved_by"] == "admin"):
+                        
+                        self.log_result("Sum-Sub Approve Applicant", True, 
+                                      f"Approved applicant {test_applicant_id}, approved_by: {data['approved_by']}", 
+                                      response_time)
+                        return True
+                    else:
+                        self.log_result("Sum-Sub Approve Applicant", False, "Invalid approval data", response_time)
+                else:
+                    missing = [f for f in required_fields if f not in data]
+                    self.log_result("Sum-Sub Approve Applicant", False, f"Missing fields: {missing}", response_time)
+            else:
+                self.log_result("Sum-Sub Approve Applicant", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            self.log_result("Sum-Sub Approve Applicant", False, f"Exception: {str(e)}", 0)
+        return False
+
+    def test_sumsub_reject_applicant(self):
+        """Test Sum-Sub reject applicant endpoint (admin only)"""
+        if "admin" not in self.admin_tokens:
+            self.log_result("Sum-Sub Reject Applicant", False, "No admin token available", 0)
+            return False
+            
+        try:
+            headers = {"Authorization": f"Bearer {self.admin_tokens['admin']}"}
+            test_applicant_id = "sumsub_app_002"
+            rejection_data = {
+                "rejection_reason": "DOCUMENT_QUALITY",
+                "rejection_comment": "Document image quality is insufficient for verification"
+            }
+            start_time = time.time()
+            response = self.session.post(f"{BACKEND_URL}/admin/sumsub/applicants/{test_applicant_id}/reject", 
+                                       headers=headers, params=rejection_data)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["applicant_id", "status", "rejected_at", "rejected_by", "rejection_reason", "message"]
+                
+                if all(field in data for field in required_fields):
+                    if (data["applicant_id"] == test_applicant_id and 
+                        data["status"] == "rejected" and
+                        data["rejected_by"] == "admin" and
+                        data["rejection_reason"] == "DOCUMENT_QUALITY"):
+                        
+                        self.log_result("Sum-Sub Reject Applicant", True, 
+                                      f"Rejected applicant {test_applicant_id}, reason: {data['rejection_reason']}", 
+                                      response_time)
+                        return True
+                    else:
+                        self.log_result("Sum-Sub Reject Applicant", False, "Invalid rejection data", response_time)
+                else:
+                    missing = [f for f in required_fields if f not in data]
+                    self.log_result("Sum-Sub Reject Applicant", False, f"Missing fields: {missing}", response_time)
+            else:
+                self.log_result("Sum-Sub Reject Applicant", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            self.log_result("Sum-Sub Reject Applicant", False, f"Exception: {str(e)}", 0)
+        return False
+
+    def test_sumsub_request_info(self):
+        """Test Sum-Sub request additional information endpoint"""
+        if "admin" not in self.admin_tokens:
+            self.log_result("Sum-Sub Request Info", False, "No admin token available", 0)
+            return False
+            
+        try:
+            headers = {"Authorization": f"Bearer {self.admin_tokens['admin']}"}
+            test_applicant_id = "sumsub_app_003"
+            request_data = {
+                "requested_documents": ["utility_bill", "bank_statement"],
+                "comment": "Please provide additional proof of address documents"
+            }
+            start_time = time.time()
+            response = self.session.post(f"{BACKEND_URL}/admin/sumsub/applicants/{test_applicant_id}/request-info", 
+                                       headers=headers, json=request_data)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["applicant_id", "status", "requested_documents", "requested_at", "requested_by", "message"]
+                
+                if all(field in data for field in required_fields):
+                    if (data["applicant_id"] == test_applicant_id and 
+                        data["status"] == "on_hold" and
+                        data["requested_by"] == "admin" and
+                        isinstance(data["requested_documents"], list) and 
+                        len(data["requested_documents"]) == 2):
+                        
+                        self.log_result("Sum-Sub Request Info", True, 
+                                      f"Requested info from {test_applicant_id}, docs: {data['requested_documents']}", 
+                                      response_time)
+                        return True
+                    else:
+                        self.log_result("Sum-Sub Request Info", False, "Invalid request info data", response_time)
+                else:
+                    missing = [f for f in required_fields if f not in data]
+                    self.log_result("Sum-Sub Request Info", False, f"Missing fields: {missing}", response_time)
+            else:
+                self.log_result("Sum-Sub Request Info", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            self.log_result("Sum-Sub Request Info", False, f"Exception: {str(e)}", 0)
+        return False
+
+    def test_sumsub_webhook_logs(self):
+        """Test Sum-Sub webhook logs endpoint"""
+        if "admin" not in self.admin_tokens:
+            self.log_result("Sum-Sub Webhook Logs", False, "No admin token available", 0)
+            return False
+            
+        try:
+            headers = {"Authorization": f"Bearer {self.admin_tokens['admin']}"}
+            start_time = time.time()
+            response = self.session.get(f"{BACKEND_URL}/admin/sumsub/webhook-logs", headers=headers)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                if ("logs" in data and "total" in data and 
+                    isinstance(data["logs"], list) and len(data["logs"]) > 0):
+                    log_entry = data["logs"][0]
+                    required_fields = ["id", "event_type", "applicant_id", "status", "received_at"]
+                    
+                    if all(field in log_entry for field in required_fields):
+                        # Check for valid event types
+                        valid_events = ["applicantCreated", "applicantPending", "applicantReviewed", "applicantOnHold"]
+                        if log_entry["event_type"] in valid_events:
+                            self.log_result("Sum-Sub Webhook Logs", True, 
+                                          f"Retrieved {len(data['logs'])} webhook logs, total: {data['total']}, "
+                                          f"first event: {log_entry['event_type']}", response_time)
+                            return True
+                        else:
+                            self.log_result("Sum-Sub Webhook Logs", False, f"Invalid event type: {log_entry['event_type']}", response_time)
+                    else:
+                        missing = [f for f in required_fields if f not in log_entry]
+                        self.log_result("Sum-Sub Webhook Logs", False, f"Missing log fields: {missing}", response_time)
+                else:
+                    self.log_result("Sum-Sub Webhook Logs", False, "Invalid response structure", response_time)
+            else:
+                self.log_result("Sum-Sub Webhook Logs", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        except Exception as e:
+            self.log_result("Sum-Sub Webhook Logs", False, f"Exception: {str(e)}", 0)
+        return False
+
+    def test_sumsub_role_access(self):
+        """Test role-based access for Sum-Sub endpoints"""
+        success_count = 0
+        
+        # Test support user access to Sum-Sub dashboard (should be allowed)
+        if "support" in self.admin_tokens:
+            try:
+                headers = {"Authorization": f"Bearer {self.admin_tokens['support']}"}
+                start_time = time.time()
+                response = self.session.get(f"{BACKEND_URL}/admin/sumsub/dashboard", headers=headers)
+                response_time = time.time() - start_time
+                
+                if response.status_code == 200:
+                    self.log_result("Support Sum-Sub Access", True, 
+                                  "Support user can access Sum-Sub dashboard correctly", response_time)
+                    success_count += 1
+                else:
+                    self.log_result("Support Sum-Sub Access", False, 
+                                  f"Support user denied Sum-Sub access: HTTP {response.status_code}", response_time)
+            except Exception as e:
+                self.log_result("Support Sum-Sub Access", False, f"Exception: {str(e)}", 0)
+        
+        # Test KYC agent access to Sum-Sub applicants (should be allowed)
+        if "kyc_agent" in self.admin_tokens:
+            try:
+                headers = {"Authorization": f"Bearer {self.admin_tokens['kyc_agent']}"}
+                start_time = time.time()
+                response = self.session.get(f"{BACKEND_URL}/admin/sumsub/applicants", headers=headers)
+                response_time = time.time() - start_time
+                
+                if response.status_code == 200:
+                    self.log_result("KYC Agent Sum-Sub Access", True, 
+                                  "KYC agent can access Sum-Sub applicants correctly", response_time)
+                    success_count += 1
+                else:
+                    self.log_result("KYC Agent Sum-Sub Access", False, 
+                                  f"KYC agent denied Sum-Sub access: HTTP {response.status_code}", response_time)
+            except Exception as e:
+                self.log_result("KYC Agent Sum-Sub Access", False, f"Exception: {str(e)}", 0)
+        
+        # Test support user trying to approve applicant (should be denied - admin only)
+        if "support" in self.admin_tokens:
+            try:
+                headers = {"Authorization": f"Bearer {self.admin_tokens['support']}"}
+                test_applicant_id = "sumsub_app_001"
+                start_time = time.time()
+                response = self.session.post(f"{BACKEND_URL}/admin/sumsub/applicants/{test_applicant_id}/approve", headers=headers)
+                response_time = time.time() - start_time
+                
+                if response.status_code == 403:
+                    self.log_result("Support Approve Restriction", True, 
+                                  "Support user properly denied approve access (admin only)", response_time)
+                    success_count += 1
+                elif response.status_code == 200:
+                    self.log_result("Support Approve Restriction", False, 
+                                  "Support user should not be able to approve applicants", response_time)
+                else:
+                    self.log_result("Support Approve Restriction", False, 
+                                  f"Unexpected response: HTTP {response.status_code}", response_time)
+            except Exception as e:
+                self.log_result("Support Approve Restriction", False, f"Exception: {str(e)}", 0)
+        
+        return success_count == 3
+
     # ========== KRAKEN API TESTING METHODS ==========
         
     def test_root_endpoint(self):
