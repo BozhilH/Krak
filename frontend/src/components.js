@@ -155,7 +155,7 @@ const Dashboard = ({ marketData, loading, setCurrentView, setSelectedPair }) => 
           <div className="flex space-x-4">
             <button 
               onClick={() => setCurrentView('trade')}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+              className="bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
             >
               Start Trading
             </button>
