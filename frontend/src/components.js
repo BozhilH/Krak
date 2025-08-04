@@ -2313,7 +2313,13 @@ const Components = {
   MarketData,
   Portfolio,
   OrderBook,
-  TradingForm
+  TradingForm,
+  ProfileSettings,
+  WalletPage,
+  SecurityPage,
+  SupportPage,
+  DepositPage,
+  WithdrawPage
 };
 
 export default Components;
