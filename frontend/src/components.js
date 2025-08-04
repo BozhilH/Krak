@@ -213,7 +213,7 @@ const Dashboard = ({ marketData, loading, setCurrentView, setSelectedPair }) => 
                   <Area
                     type="monotone"
                     dataKey="value"
-                    stroke="#8b5cf6"
+                    stroke="#14b8a6"
                     fill="url(#gradient)"
                     strokeWidth={2}
                   />
