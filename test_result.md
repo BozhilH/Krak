@@ -314,8 +314,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Comprehensive Kraken API integration backend"
-    - "Enhanced market data endpoints"
+    - "Update frontend to use backend API endpoints"
+    - "Enhanced order book integration"
+    - "OHLC chart data integration"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
