@@ -140,7 +140,7 @@ const Dashboard = ({ marketData, loading, setCurrentView, setSelectedPair }) => 
       {/* Hero Section */}
       <div className="relative overflow-hidden rounded-2xl mb-8">
         <div 
-          className="absolute inset-0 bg-gradient-to-r from-purple-900 via-blue-900 to-indigo-900"
+          className="absolute inset-0 bg-gradient-to-r from-teal-900 via-cyan-900 to-blue-900"
           style={{
             backgroundImage: `url('https://images.unsplash.com/photo-1639768939489-025b90ba9f23?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDF8MHwxfHNlYXJjaHwxfHxjcnlwdG9jdXJyZW5jeSUyMHRyYWRpbmd8ZW58MHx8fGJsdWV8MTc1NDI5MzUwNXww&ixlib=rb-4.1.0&q=85')`,
             backgroundSize: 'cover',
