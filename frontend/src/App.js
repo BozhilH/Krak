@@ -99,7 +99,7 @@ function App() {
   };
 
   return (
-    <div className="App bg-gray-900 text-white min-h-screen">
+    <div className="App bg-gray-900 text-white min-h-screen flex flex-col">
       <Header 
         currentView={currentView} 
         setCurrentView={setCurrentView}
@@ -107,7 +107,7 @@ function App() {
         marketData={marketData}
       />
       
-      <main className="min-h-screen">
+      <main className="flex-1">
         {currentView === 'dashboard' && (
           <Dashboard 
             marketData={marketData}
@@ -169,6 +169,8 @@ function App() {
           <AboutUs />
         )}
       </main>
+
+      <Footer setCurrentView={setCurrentView} />
     </div>
   );
 }
