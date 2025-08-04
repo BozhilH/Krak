@@ -177,7 +177,7 @@ const Dashboard = ({ marketData, loading, setCurrentView, setSelectedPair }) => 
               <h2 className="text-xl font-semibold">Portfolio Overview</h2>
               <button 
                 onClick={() => setCurrentView('portfolio')}
-                className="text-purple-400 hover:text-purple-300 text-sm font-medium"
+                className="text-teal-400 hover:text-teal-300 text-sm font-medium"
               >
                 View All
               </button>
