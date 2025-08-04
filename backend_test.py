@@ -28,6 +28,7 @@ class BackendTester:
         self.results = []
         self.session = requests.Session()
         self.session.timeout = 30
+        self.admin_tokens = {}  # Store tokens for different admin users
         
     def log_result(self, test_name: str, success: bool, details: str, response_time: float = 0):
         """Log test result"""
