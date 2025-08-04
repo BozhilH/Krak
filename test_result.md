@@ -371,9 +371,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Update frontend to use backend API endpoints"
-    - "Enhanced order book integration"
-    - "OHLC chart data integration"
+    - "Header search functionality"
+    - "Header notifications system" 
+    - "Header user profile functionality"
+    - "Header settings functionality"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
