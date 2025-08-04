@@ -875,7 +875,6 @@ const Components = {
   MarketData,
   Portfolio,
   OrderBook,
-  PriceChart,
   TradingForm
 };
 
