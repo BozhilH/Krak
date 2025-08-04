@@ -640,6 +640,8 @@ test_plan:
 agent_communication:
   - agent: "testing"
     message: "Starting comprehensive testing of Kraken cryptocurrency exchange clone. Will test all major functionality including navigation, data display, trading interface, and responsive design."
+  - agent: "main"
+    message: "Starting Sum-Sub KYC frontend integration completion. Backend Sum-Sub API endpoints already implemented and tested. Frontend KYC components (AdminKYCDashboard, AdminKYCApplicants, AdminKYCApplicantDetail) exist but missing routing integration. Plan: 1) Add KYC menu to AdminSidebar, 2) Add KYC routing to AdminPanel, 3) Create ManualKYCManagement for <250 EUR transactions, 4) Create comprehensive KYC workflow with manual/Sum-Sub transition."
   - agent: "testing"
     message: "CRITICAL ISSUE FOUND AND FIXED: PriceChart component was exported but not defined, causing React app to fail loading. Fixed by removing PriceChart from exports in components.js. Frontend service restarted successfully."
   - agent: "testing"
