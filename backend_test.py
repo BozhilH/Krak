@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Backend API Testing Script for Kraken API Integration
-Tests all implemented Kraken API endpoints with real cryptocurrency pairs
+Backend API Testing Script for CryptoOX Admin Panel and Kraken API Integration
+Tests all implemented admin panel endpoints and Kraken API endpoints
 """
 
 import requests
@@ -15,6 +15,13 @@ BACKEND_URL = "https://1d229934-0739-443b-af13-4071d455a379.preview.emergentagen
 # Test pairs for validation
 TEST_PAIRS = ["BTCUSD", "ETHUSD", "XRPUSD", "ADAUSD", "DOTUSD"]
 INVALID_PAIR = "INVALIDPAIR"
+
+# Admin test credentials
+ADMIN_USERS = {
+    "admin": {"username": "admin", "password": "admin123", "role": "admin"},
+    "support": {"username": "support", "password": "support123", "role": "support"},
+    "kyc_agent": {"username": "kyc_agent", "password": "kyc123", "role": "kyc"}
+}
 
 class BackendTester:
     def __init__(self):
