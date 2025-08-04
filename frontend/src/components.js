@@ -418,22 +418,78 @@ const TradingInterface = ({ selectedPair, marketData, loading, setSelectedPair }
 
 // Order Book Component
 const OrderBook = ({ selectedPair }) => {
-  const mockOrderBook = {
-    asks: [
-      { price: 45120, size: 0.5234, total: 0.5234 },
-      { price: 45115, size: 1.2341, total: 1.7575 },
-      { price: 45110, size: 0.8765, total: 2.634 },
-      { price: 45105, size: 2.1234, total: 4.7574 },
-      { price: 45100, size: 0.6543, total: 5.4117 }
-    ],
-    bids: [
-      { price: 45095, size: 1.2341, total: 1.2341 },
-      { price: 45090, size: 0.8765, total: 2.1106 },
-      { price: 45085, size: 2.1234, total: 4.234 },
-      { price: 45080, size: 0.6543, total: 4.8883 },
-      { price: 45075, size: 1.5432, total: 6.4315 }
-    ]
+  const [orderBook, setOrderBook] = useState({ asks: [], bids: [] });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchOrderBook();
+    const interval = setInterval(fetchOrderBook, 5000); // Update every 5 seconds
+    return () => clearInterval(interval);
+  }, [selectedPair]);
+
+  const fetchOrderBook = async () => {
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const response = await fetch(`${backendUrl}/api/orderbook/${selectedPair}?count=10`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        setOrderBook({
+          asks: data.asks.slice(0, 5),
+          bids: data.bids.slice(0, 5)
+        });
+      } else {
+        // Fallback to mock data
+        setOrderBook({
+          asks: [
+            { price: 45120, volume: 0.5234, timestamp: Date.now() },
+            { price: 45115, volume: 1.2341, timestamp: Date.now() },
+            { price: 45110, volume: 0.8765, timestamp: Date.now() },
+            { price: 45105, volume: 2.1234, timestamp: Date.now() },
+            { price: 45100, volume: 0.6543, timestamp: Date.now() }
+          ],
+          bids: [
+            { price: 45095, volume: 1.2341, timestamp: Date.now() },
+            { price: 45090, volume: 0.8765, timestamp: Date.now() },
+            { price: 45085, volume: 2.1234, timestamp: Date.now() },
+            { price: 45080, volume: 0.6543, timestamp: Date.now() },
+            { price: 45075, volume: 1.5432, timestamp: Date.now() }
+          ]
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching order book:', error);
+      // Use mock data as fallback
+      setOrderBook({
+        asks: [
+          { price: 45120, volume: 0.5234, timestamp: Date.now() },
+          { price: 45115, volume: 1.2341, timestamp: Date.now() },
+          { price: 45110, volume: 0.8765, timestamp: Date.now() },
+          { price: 45105, volume: 2.1234, timestamp: Date.now() },
+          { price: 45100, volume: 0.6543, timestamp: Date.now() }
+        ],
+        bids: [
+          { price: 45095, volume: 1.2341, timestamp: Date.now() },
+          { price: 45090, volume: 0.8765, timestamp: Date.now() },
+          { price: 45085, volume: 2.1234, timestamp: Date.now() },
+          { price: 45080, volume: 0.6543, timestamp: Date.now() },
+          { price: 45075, volume: 1.5432, timestamp: Date.now() }
+        ]
+      });
+    }
+    setLoading(false);
   };
+
+  if (loading) {
+    return (
+      <div className="bg-gray-800 rounded-lg p-6">
+        <h3 className="text-lg font-semibold mb-4">Order Book</h3>
+        <div className="text-center py-8">
+          <RefreshCw className="w-6 h-6 animate-spin mx-auto text-gray-400" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gray-800 rounded-lg p-6">
@@ -448,10 +504,10 @@ const OrderBook = ({ selectedPair }) => {
               <span>Price</span>
               <span>Size</span>
             </div>
-            {mockOrderBook.asks.reverse().map((ask, index) => (
+            {orderBook.asks.reverse().map((ask, index) => (
               <div key={index} className="flex justify-between text-sm">
                 <span className="text-red-400">${ask.price.toLocaleString()}</span>
-                <span>{ask.size.toFixed(4)}</span>
+                <span>{ask.volume.toFixed(4)}</span>
               </div>
             ))}
           </div>
@@ -465,10 +521,10 @@ const OrderBook = ({ selectedPair }) => {
               <span>Price</span>
               <span>Size</span>
             </div>
-            {mockOrderBook.bids.map((bid, index) => (
+            {orderBook.bids.map((bid, index) => (
               <div key={index} className="flex justify-between text-sm">
                 <span className="text-green-400">${bid.price.toLocaleString()}</span>
-                <span>{bid.size.toFixed(4)}</span>
+                <span>{bid.volume.toFixed(4)}</span>
               </div>
             ))}
           </div>
