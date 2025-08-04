@@ -603,6 +603,7 @@ const Header = ({ currentView, setCurrentView, setSelectedPair, marketData }) =>
                 <UserDropdown
                   isOpen={activeDropdown === 'user'}
                   onClose={() => setActiveDropdown(null)}
+                  setCurrentView={setCurrentView}
                 />
               </div>
 
