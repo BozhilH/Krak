@@ -26,7 +26,7 @@ function App() {
 
   useEffect(() => {
     fetchMarketData();
-    const interval = setInterval(fetchMarketData, 30000); // Update every 30 seconds
+    const interval = setInterval(fetchMarketData, 3000); // Update every 3 seconds for real-time data
     return () => clearInterval(interval);
   }, []);
 
