@@ -271,6 +271,42 @@ frontend:
         agent: "testing"
         comment: "✅ PASSED: API integration fully functional. Real cryptocurrency price data loading from Kraken API for BTC/USD ($114,675.1), ETH/USD ($3,553.33), XRP/USD ($3.012), ADA/USD ($0.742), DOT/USD ($3.633), LINK/USD ($16.643). Price changes, volume data, and percentage changes all displaying correctly. Fallback to mock data implemented in case of API failure."
 
+  - task: "Update frontend to use backend API endpoints"
+    implemented: false
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Updating frontend to use our backend endpoints instead of direct Kraken API calls. Will modify App.js to call /api/market-summary and other components to use our backend."
+
+  - task: "Enhanced order book integration"
+    implemented: false
+    working: "NA"
+    file: "/app/frontend/src/components.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Integrating real order book data from backend into trading interface for live order book display."
+
+  - task: "OHLC chart data integration"
+    implemented: false
+    working: "NA"
+    file: "/app/frontend/src/components.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Replacing mock chart data with real OHLC data from backend for authentic price charts."
+
 metadata:
   created_by: "testing_agent"
   version: "1.0"
