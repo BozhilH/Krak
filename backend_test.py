@@ -728,14 +728,13 @@ class BackendTester:
         try:
             headers = {"Authorization": f"Bearer {self.admin_tokens['admin']}"}
             test_applicant_id = "sumsub_app_003"
-            # Send as query parameters instead of JSON body
-            params = {
+            request_data = {
                 "requested_documents": ["utility_bill", "bank_statement"],
                 "comment": "Please provide additional proof of address documents"
             }
             start_time = time.time()
             response = self.session.post(f"{BACKEND_URL}/admin/sumsub/applicants/{test_applicant_id}/request-info", 
-                                       headers=headers, params=params)
+                                       headers=headers, json=request_data)
             response_time = time.time() - start_time
             
             if response.status_code == 200:
@@ -747,7 +746,7 @@ class BackendTester:
                         data["status"] == "on_hold" and
                         data["requested_by"] == "admin" and
                         isinstance(data["requested_documents"], list) and 
-                        len(data["requested_documents"]) >= 1):  # At least one document requested
+                        len(data["requested_documents"]) == 2):
                         
                         self.log_result("Sum-Sub Request Info", True, 
                                       f"Requested info from {test_applicant_id}, docs: {data['requested_documents']}", 
