@@ -3488,7 +3488,14 @@ const Components = {
   DepositPage,
   WithdrawPage,
   Footer,
-  AboutUs
+  AboutUs,
+  AdminPanel,
+  AdminLogin,
+  AdminHeader,
+  AdminSidebar,
+  AdminDashboard,
+  AdminClients,
+  AdminTickets
 };
 
 export default Components;
