@@ -450,8 +450,9 @@ const SettingsDropdown = ({ isOpen, onClose }) => {
 };
 
 // Header Component
-const Header = ({ currentView, setCurrentView }) => {
+const Header = ({ currentView, setCurrentView, setSelectedPair, marketData }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState(null);
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
@@ -460,82 +461,50 @@ const Header = ({ currentView, setCurrentView }) => {
     { id: 'portfolio', label: 'Portfolio', icon: Wallet }
   ];
 
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.header-dropdown')) {
+        setActiveDropdown(null);
+      }
+    };
+    
+    if (activeDropdown) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [activeDropdown]);
+
+  const toggleDropdown = (dropdownName) => {
+    setActiveDropdown(activeDropdown === dropdownName ? null : dropdownName);
+  };
+
   return (
-    <header className="bg-gray-800 border-b border-gray-700">
-      <div className="px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="flex items-center">
-                <div className="w-10 h-10 bg-gradient-to-r from-teal-600 to-cyan-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-xl">K</span>
+    <>
+      <header className="bg-gray-800 border-b border-gray-700 relative">
+        <div className="px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo */}
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 bg-gradient-to-r from-teal-600 to-cyan-600 rounded-lg flex items-center justify-center">
+                    <span className="text-white font-bold text-xl">K</span>
+                  </div>
+                  <span className="ml-2 text-xl font-bold text-white">Kraken</span>
                 </div>
-                <span className="ml-2 text-xl font-bold text-white">Kraken</span>
               </div>
             </div>
-          </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setCurrentView(item.id)}
-                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    currentView === item.id
-                      ? 'bg-teal-600 text-white'
-                      : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                  }`}
-                >
-                  <Icon className="w-4 h-4 mr-2" />
-                  {item.label}
-                </button>
-              );
-            })}
-          </nav>
-
-          {/* Right side actions */}
-          <div className="flex items-center space-x-4">
-            <button className="p-2 text-gray-400 hover:text-white">
-              <Search className="w-5 h-5" />
-            </button>
-            <button className="p-2 text-gray-400 hover:text-white">
-              <Bell className="w-5 h-5" />
-            </button>
-            <button className="p-2 text-gray-400 hover:text-white">
-              <User className="w-5 h-5" />
-            </button>
-            <button className="p-2 text-gray-400 hover:text-white">
-              <Settings className="w-5 h-5" />
-            </button>
-
-            {/* Mobile menu button */}
-            <button
-              className="md:hidden p-2 text-gray-400 hover:text-white"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
-              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <div className="md:hidden pb-4">
-            <div className="space-y-1">
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex space-x-8">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 return (
                   <button
                     key={item.id}
-                    onClick={() => {
-                      setCurrentView(item.id);
-                      setIsMenuOpen(false);
-                    }}
-                    className={`flex items-center w-full px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                    onClick={() => setCurrentView(item.id)}
+                    className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                       currentView === item.id
                         ? 'bg-teal-600 text-white'
                         : 'text-gray-300 hover:bg-gray-700 hover:text-white'
@@ -546,11 +515,129 @@ const Header = ({ currentView, setCurrentView }) => {
                   </button>
                 );
               })}
+            </nav>
+
+            {/* Right side actions */}
+            <div className="flex items-center space-x-2 relative">
+              {/* Search */}
+              <div className="header-dropdown relative">
+                <button 
+                  className={`p-2 rounded-lg transition-colors ${
+                    activeDropdown === 'search' ? 'bg-gray-700 text-teal-400' : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                  }`}
+                  onClick={() => toggleDropdown('search')}
+                >
+                  <Search className="w-5 h-5" />
+                </button>
+                <SearchDropdown
+                  isOpen={activeDropdown === 'search'}
+                  onClose={() => setActiveDropdown(null)}
+                  setSelectedPair={setSelectedPair}
+                  setCurrentView={setCurrentView}
+                  marketData={marketData}
+                />
+              </div>
+
+              {/* Notifications */}
+              <div className="header-dropdown relative">
+                <button 
+                  className={`p-2 rounded-lg transition-colors relative ${
+                    activeDropdown === 'notifications' ? 'bg-gray-700 text-teal-400' : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                  }`}
+                  onClick={() => toggleDropdown('notifications')}
+                >
+                  <Bell className="w-5 h-5" />
+                  {/* Notification badge */}
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full flex items-center justify-center">
+                    <span className="text-xs text-white font-bold">2</span>
+                  </span>
+                </button>
+                <NotificationsDropdown
+                  isOpen={activeDropdown === 'notifications'}
+                  onClose={() => setActiveDropdown(null)}
+                />
+              </div>
+
+              {/* User */}
+              <div className="header-dropdown relative">
+                <button 
+                  className={`p-2 rounded-lg transition-colors ${
+                    activeDropdown === 'user' ? 'bg-gray-700 text-teal-400' : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                  }`}
+                  onClick={() => toggleDropdown('user')}
+                >
+                  <User className="w-5 h-5" />
+                </button>
+                <UserDropdown
+                  isOpen={activeDropdown === 'user'}
+                  onClose={() => setActiveDropdown(null)}
+                />
+              </div>
+
+              {/* Settings */}
+              <div className="header-dropdown relative">
+                <button 
+                  className={`p-2 rounded-lg transition-colors ${
+                    activeDropdown === 'settings' ? 'bg-gray-700 text-teal-400' : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                  }`}
+                  onClick={() => toggleDropdown('settings')}
+                >
+                  <Settings className="w-5 h-5" />
+                </button>
+                <SettingsDropdown
+                  isOpen={activeDropdown === 'settings'}
+                  onClose={() => setActiveDropdown(null)}
+                />
+              </div>
+
+              {/* Mobile menu button */}
+              <button
+                className="md:hidden p-2 text-gray-400 hover:text-white ml-2"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+              >
+                {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
             </div>
           </div>
-        )}
-      </div>
-    </header>
+
+          {/* Mobile Navigation */}
+          {isMenuOpen && (
+            <div className="md:hidden pb-4">
+              <div className="space-y-1">
+                {navItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setCurrentView(item.id);
+                        setIsMenuOpen(false);
+                      }}
+                      className={`flex items-center w-full px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                        currentView === item.id
+                          ? 'bg-teal-600 text-white'
+                          : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4 mr-2" />
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      </header>
+
+      {/* Overlay for mobile dropdowns */}
+      {activeDropdown && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-20 z-40 md:hidden"
+          onClick={() => setActiveDropdown(null)}
+        />
+      )}
+    </>
   );
 };
 
