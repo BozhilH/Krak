@@ -17,7 +17,8 @@ const {
   DepositPage,
   WithdrawPage,
   Footer,
-  AboutUs
+  AboutUs,
+  AdminPanel
 } = Components;
 
 function App() {
