@@ -635,6 +635,7 @@ test_plan:
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
+  admin_panel_testing_complete: true
 
 agent_communication:
   - agent: "testing"
