@@ -2317,7 +2317,6 @@ const Components = {
   ProfileSettings,
   WalletPage,
   SecurityPage,
-  SupportPage,
   DepositPage,
   WithdrawPage
 };
