@@ -346,7 +346,7 @@ const TradingInterface = ({ selectedPair, marketData, loading, setSelectedPair }
                     onClick={() => setSelectedPair(pair)}
                     className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                       selectedPair === pair 
-                        ? 'bg-purple-600 text-white' 
+                        ? 'bg-teal-600 text-white' 
                         : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                     }`}
                   >
