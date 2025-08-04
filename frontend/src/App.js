@@ -9,7 +9,6 @@ const {
   MarketData,
   Portfolio,
   OrderBook,
-  PriceChart,
   TradingForm
 } = Components;
 
