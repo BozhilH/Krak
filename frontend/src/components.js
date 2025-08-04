@@ -739,6 +739,712 @@ const AdminTickets = ({ user }) => {
   );
 };
 
+// Sum-Sub KYC Dashboard Component
+const AdminKYCDashboard = ({ user }) => {
+  const [kycData, setKycData] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchKYCDashboard();
+  }, []);
+
+  const fetchKYCDashboard = async () => {
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const token = localStorage.getItem('admin_token');
+      
+      const response = await fetch(`${backendUrl}/api/admin/sumsub/dashboard`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setKycData(data);
+      }
+    } catch (error) {
+      console.error('Error fetching KYC dashboard:', error);
+    }
+    setLoading(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-center h-64">
+          <RefreshCw className="w-8 h-8 animate-spin text-gray-400" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-white">KYC Verification Dashboard</h1>
+        <p className="text-gray-400">Sum-Sub integration for identity verification</p>
+      </div>
+
+      {/* KYC Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+        <div className="bg-gray-800 rounded-lg p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-400 text-sm">Total Applications</p>
+              <p className="text-2xl font-bold text-white">{kycData.total_applications}</p>
+            </div>
+            <Users className="w-8 h-8 text-blue-400" />
+          </div>
+        </div>
+
+        <div className="bg-gray-800 rounded-lg p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-400 text-sm">Pending Review</p>
+              <p className="text-2xl font-bold text-white">{kycData.pending_review}</p>
+              <p className="text-yellow-400 text-sm">Requires attention</p>
+            </div>
+            <Clock className="w-8 h-8 text-yellow-400" />
+          </div>
+        </div>
+
+        <div className="bg-gray-800 rounded-lg p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-400 text-sm">Approved</p>
+              <p className="text-2xl font-bold text-white">{kycData.approved}</p>
+              <p className="text-green-400 text-sm">Verified users</p>
+            </div>
+            <CheckCircle className="w-8 h-8 text-green-400" />
+          </div>
+        </div>
+
+        <div className="bg-gray-800 rounded-lg p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-400 text-sm">Rejected</p>
+              <p className="text-2xl font-bold text-white">{kycData.rejected}</p>
+              <p className="text-red-400 text-sm">Failed verification</p>
+            </div>
+            <XCircle className="w-8 h-8 text-red-400" />
+          </div>
+        </div>
+
+        <div className="bg-gray-800 rounded-lg p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-400 text-sm">On Hold</p>
+              <p className="text-2xl font-bold text-white">{kycData.on_hold}</p>
+              <p className="text-orange-400 text-sm">Additional info needed</p>
+            </div>
+            <AlertTriangle className="w-8 h-8 text-orange-400" />
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Applications */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="bg-gray-800 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Recent Applications</h3>
+          <div className="space-y-4">
+            {kycData.recent_applications?.map((app) => (
+              <div key={app.applicant_id} className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-teal-600 to-cyan-600 rounded-full flex items-center justify-center">
+                    <span className="text-white font-semibold text-sm">
+                      {app.name.split(' ').map(n => n[0]).join('')}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="font-medium text-white">{app.name}</p>
+                    <p className="text-sm text-gray-400">{app.email}</p>
+                    <p className="text-sm text-gray-400">{app.country} • {app.level}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    app.status === 'approved' ? 'bg-green-600 text-white' :
+                    app.status === 'pending_review' ? 'bg-yellow-600 text-white' :
+                    app.status === 'rejected' ? 'bg-red-600 text-white' :
+                    'bg-orange-600 text-white'
+                  }`}>
+                    {app.status.replace('_', ' ')}
+                  </span>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {new Date(app.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-gray-800 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Verification Levels</h3>
+          <div className="space-y-4">
+            {kycData.verification_levels?.map((level) => (
+              <div key={level.name} className="p-4 bg-gray-700 rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-medium text-white">{level.name}</h4>
+                  <span className="text-teal-400 font-semibold">{level.count}</span>
+                </div>
+                <p className="text-sm text-gray-400">{level.description}</p>
+              </div>
+            ))}
+            
+            <div className="mt-6">
+              <h4 className="font-medium text-white mb-3">Processing Time</h4>
+              <div className="bg-gray-700 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-300">Average Time</span>
+                  <span className="text-teal-400 font-semibold">{kycData.avg_processing_time_hours}h</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Country Distribution */}
+      <div className="bg-gray-800 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-white mb-4">Applications by Country</h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          {Object.entries(kycData.country_distribution || {}).map(([country, count]) => (
+            <div key={country} className="text-center p-3 bg-gray-700 rounded-lg">
+              <p className="font-medium text-white">{country}</p>
+              <p className="text-2xl font-bold text-teal-400">{count}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Sum-Sub Applicants Management Component
+const AdminKYCApplicants = ({ user }) => {
+  const [applicants, setApplicants] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState('');
+  const [levelFilter, setLevelFilter] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    fetchApplicants();
+  }, [statusFilter, levelFilter]);
+
+  const fetchApplicants = async () => {
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const token = localStorage.getItem('admin_token');
+      
+      const params = new URLSearchParams();
+      if (statusFilter) params.append('status', statusFilter);
+      if (levelFilter) params.append('level', levelFilter);
+      
+      const response = await fetch(`${backendUrl}/api/admin/sumsub/applicants?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setApplicants(data.applicants);
+      }
+    } catch (error) {
+      console.error('Error fetching applicants:', error);
+    }
+    setLoading(false);
+  };
+
+  const handleApproval = async (applicantId) => {
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const token = localStorage.getItem('admin_token');
+      
+      const response = await fetch(`${backendUrl}/api/admin/sumsub/applicants/${applicantId}/approve`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        fetchApplicants(); // Refresh list
+      }
+    } catch (error) {
+      console.error('Error approving applicant:', error);
+    }
+  };
+
+  const handleRejection = async (applicantId, reason) => {
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const token = localStorage.getItem('admin_token');
+      
+      const response = await fetch(`${backendUrl}/api/admin/sumsub/applicants/${applicantId}/reject`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          rejection_reason: reason,
+          rejection_comment: 'Rejected from admin panel'
+        })
+      });
+
+      if (response.ok) {
+        fetchApplicants(); // Refresh list
+      }
+    } catch (error) {
+      console.error('Error rejecting applicant:', error);
+    }
+  };
+
+  const filteredApplicants = applicants.filter(applicant =>
+    applicant.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    applicant.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    applicant.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-center h-64">
+          <RefreshCw className="w-8 h-8 animate-spin text-gray-400" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-white mb-2">KYC Applicants</h1>
+        <p className="text-gray-400">Manage Sum-Sub verification applications</p>
+      </div>
+
+      {/* Filters */}
+      <div className="mb-6 flex flex-wrap gap-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search applicants..."
+            className="bg-gray-800 border border-gray-700 rounded-lg pl-10 pr-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
+          />
+        </div>
+
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+        >
+          <option value="">All Statuses</option>
+          <option value="pending_review">Pending Review</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+          <option value="on_hold">On Hold</option>
+          <option value="in_progress">In Progress</option>
+        </select>
+
+        <select
+          value={levelFilter}
+          onChange={(e) => setLevelFilter(e.target.value)}
+          className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+        >
+          <option value="">All Levels</option>
+          <option value="basic-kyc">Basic KYC</option>
+          <option value="enhanced-kyc">Enhanced KYC</option>
+          <option value="corporate-kyc">Corporate KYC</option>
+        </select>
+
+        <button
+          onClick={fetchApplicants}
+          className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center"
+        >
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Refresh
+        </button>
+      </div>
+
+      {/* Applicants Table */}
+      <div className="bg-gray-800 rounded-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-700">
+              <tr>
+                <th className="text-left py-3 px-4 font-medium text-gray-300">Applicant</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-300">Email</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-300">Country</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-300">Level</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-300">Status</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-300">Risk Score</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-300">Created</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-300">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredApplicants.map((applicant) => (
+                <tr key={applicant.applicant_id} className="border-t border-gray-700 hover:bg-gray-700">
+                  <td className="py-4 px-4">
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 bg-gradient-to-r from-teal-600 to-cyan-600 rounded-full flex items-center justify-center mr-3">
+                        <span className="text-white font-semibold text-xs">
+                          {applicant.first_name[0]}{applicant.last_name[0]}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="font-medium text-white">{applicant.first_name} {applicant.last_name}</p>
+                        <p className="text-sm text-gray-400">ID: {applicant.applicant_id.substring(0, 8)}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-4 px-4 text-gray-300">{applicant.email}</td>
+                  <td className="py-4 px-4 text-gray-300">{applicant.country}</td>
+                  <td className="py-4 px-4">
+                    <span className="px-2 py-1 bg-blue-600 text-white text-xs rounded">
+                      {applicant.level}
+                    </span>
+                  </td>
+                  <td className="py-4 px-4">
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                      applicant.status === 'approved' ? 'bg-green-600 text-white' :
+                      applicant.status === 'pending_review' ? 'bg-yellow-600 text-white' :
+                      applicant.status === 'rejected' ? 'bg-red-600 text-white' :
+                      applicant.status === 'on_hold' ? 'bg-orange-600 text-white' :
+                      'bg-blue-600 text-white'
+                    }`}>
+                      {applicant.status.replace('_', ' ')}
+                    </span>
+                  </td>
+                  <td className="py-4 px-4">
+                    <span className={`font-medium ${
+                      applicant.risk_score <= 0.3 ? 'text-green-400' :
+                      applicant.risk_score <= 0.7 ? 'text-yellow-400' :
+                      'text-red-400'
+                    }`}>
+                      {applicant.risk_score}
+                    </span>
+                  </td>
+                  <td className="py-4 px-4 text-gray-300">
+                    {new Date(applicant.created_at).toLocaleDateString()}
+                  </td>
+                  <td className="py-4 px-4">
+                    <div className="flex space-x-2">
+                      {applicant.status === 'pending_review' && user.role === 'admin' && (
+                        <>
+                          <button
+                            onClick={() => handleApproval(applicant.applicant_id)}
+                            className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded text-xs"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => handleRejection(applicant.applicant_id, 'Manual review rejection')}
+                            className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs"
+                          >
+                            Reject
+                          </button>
+                        </>
+                      )}
+                      <button className="bg-gray-600 hover:bg-gray-700 text-white px-2 py-1 rounded text-xs">
+                        View
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Sum-Sub Applicant Detail Component
+const AdminKYCApplicantDetail = ({ applicantId, onBack }) => {
+  const [applicant, setApplicant] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchApplicantDetail();
+  }, [applicantId]);
+
+  const fetchApplicantDetail = async () => {
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const token = localStorage.getItem('admin_token');
+      
+      const response = await fetch(`${backendUrl}/api/admin/sumsub/applicants/${applicantId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setApplicant(data);
+      }
+    } catch (error) {
+      console.error('Error fetching applicant detail:', error);
+    }
+    setLoading(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-center h-64">
+          <RefreshCw className="w-8 h-8 animate-spin text-gray-400" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!applicant) {
+    return (
+      <div className="p-6">
+        <div className="text-center">
+          <p className="text-gray-400">Applicant not found</p>
+          <button
+            onClick={onBack}
+            className="mt-4 bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6">
+      <div className="mb-6 flex items-center">
+        <button
+          onClick={onBack}
+          className="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg mr-4"
+        >
+          <X className="w-4 h-4" />
+        </button>
+        <h1 className="text-2xl font-bold text-white">KYC Application Detail</h1>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Basic Information */}
+        <div className="lg:col-span-2">
+          <div className="bg-gray-800 rounded-lg p-6 mb-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Personal Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Full Name</label>
+                <p className="text-white">
+                  {applicant.info.first_name} {applicant.info.middle_name} {applicant.info.last_name}
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Email</label>
+                <p className="text-white">{applicant.info.email}</p>
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Phone</label>
+                <p className="text-white">{applicant.info.phone}</p>
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Date of Birth</label>
+                <p className="text-white">{applicant.info.date_of_birth}</p>
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Country</label>
+                <p className="text-white">{applicant.info.country}</p>
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Nationality</label>
+                <p className="text-white">{applicant.info.nationality}</p>
+              </div>
+            </div>
+
+            {applicant.info.addresses && applicant.info.addresses.length > 0 && (
+              <div className="mt-6">
+                <label className="block text-sm text-gray-400 mb-2">Address</label>
+                <div className="bg-gray-700 p-4 rounded-lg">
+                  <p className="text-white">
+                    {applicant.info.addresses[0].street}<br/>
+                    {applicant.info.addresses[0].city}, {applicant.info.addresses[0].state} {applicant.info.addresses[0].postal_code}<br/>
+                    {applicant.info.addresses[0].country}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Documents */}
+          <div className="bg-gray-800 rounded-lg p-6 mb-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Submitted Documents</h3>
+            <div className="space-y-4">
+              {applicant.documents.map((doc) => (
+                <div key={doc.document_id} className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
+                  <div>
+                    <p className="font-medium text-white">{doc.document_type.replace('_', ' ')}</p>
+                    <p className="text-sm text-gray-400">
+                      {doc.country} • {doc.image_ids.length} image(s)
+                    </p>
+                    <p className="text-sm text-gray-400">
+                      Uploaded: {new Date(doc.uploaded_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    doc.status === 'approved' ? 'bg-green-600 text-white' :
+                    doc.status === 'rejected' ? 'bg-red-600 text-white' :
+                    'bg-yellow-600 text-white'
+                  }`}>
+                    {doc.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Verification Steps */}
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Verification Progress</h3>
+            <div className="space-y-4">
+              {applicant.verification_steps.map((step, index) => (
+                <div key={index} className="flex items-center">
+                  <div className={`w-4 h-4 rounded-full mr-4 ${
+                    step.status === 'completed' ? 'bg-green-500' :
+                    step.status === 'in_progress' ? 'bg-yellow-500' :
+                    'bg-gray-500'
+                  }`}></div>
+                  <div>
+                    <p className="text-white font-medium">{step.step.replace('_', ' ')}</p>
+                    <p className="text-sm text-gray-400">
+                      {step.status === 'completed' && step.completed_at ? 
+                        `Completed: ${new Date(step.completed_at).toLocaleString()}` :
+                        `Status: ${step.status}`
+                      }
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Status & Actions */}
+        <div className="space-y-6">
+          {/* Current Status */}
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Status</h3>
+            <div className="space-y-4">
+              <div>
+                <span className={`px-3 py-2 rounded text-sm font-medium ${
+                  applicant.status === 'approved' ? 'bg-green-600 text-white' :
+                  applicant.status === 'pending_review' ? 'bg-yellow-600 text-white' :
+                  applicant.status === 'rejected' ? 'bg-red-600 text-white' :
+                  'bg-orange-600 text-white'
+                }`}>
+                  {applicant.status.replace('_', ' ').toUpperCase()}
+                </span>
+              </div>
+              <div>
+                <p className="text-sm text-gray-400">Level</p>
+                <p className="text-white">{applicant.level}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-400">Created</p>
+                <p className="text-white">{new Date(applicant.created_at).toLocaleString()}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-400">Last Update</p>
+                <p className="text-white">{new Date(applicant.updated_at).toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Risk Assessment */}
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Risk Assessment</h3>
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-gray-400 mb-2">Overall Score</p>
+                <div className="bg-gray-700 rounded-lg p-3">
+                  <span className={`text-lg font-bold ${
+                    applicant.risk_assessment.overall_score <= 0.3 ? 'text-green-400' :
+                    applicant.risk_assessment.overall_score <= 0.7 ? 'text-yellow-400' :
+                    'text-red-400'
+                  }`}>
+                    {applicant.risk_assessment.overall_score}
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-400 mb-2">Risk Factors</p>
+                <div className="space-y-2">
+                  {applicant.risk_assessment.factors.map((factor, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 bg-gray-700 rounded">
+                      <span className="text-white text-sm">{factor.factor.replace('_', ' ')}</span>
+                      <span className={`text-sm font-medium ${
+                        factor.status === 'pass' ? 'text-green-400' : 'text-red-400'
+                      }`}>
+                        {factor.score}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* AML Results */}
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">AML Screening</h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-white">Sanctions Match</span>
+                <span className={`px-2 py-1 rounded text-xs ${
+                  applicant.aml_results.sanctions_match ? 'bg-red-600 text-white' : 'bg-green-600 text-white'
+                }`}>
+                  {applicant.aml_results.sanctions_match ? 'MATCH' : 'CLEAR'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-white">PEP Match</span>
+                <span className={`px-2 py-1 rounded text-xs ${
+                  applicant.aml_results.pep_match ? 'bg-red-600 text-white' : 'bg-green-600 text-white'
+                }`}>
+                  {applicant.aml_results.pep_match ? 'MATCH' : 'CLEAR'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-white">Adverse Media</span>
+                <span className={`px-2 py-1 rounded text-xs ${
+                  applicant.aml_results.adverse_media ? 'bg-red-600 text-white' : 'bg-green-600 text-white'
+                }`}>
+                  {applicant.aml_results.adverse_media ? 'FOUND' : 'CLEAR'}
+                </span>
+              </div>
+              <div className="pt-2 border-t border-gray-700">
+                <p className="text-sm text-gray-400">
+                  Screened: {new Date(applicant.aml_results.screening_date).toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Admin Main Component
 const AdminPanel = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
