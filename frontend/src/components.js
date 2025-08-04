@@ -16,7 +16,20 @@ import {
   Star,
   Plus,
   Minus,
-  RefreshCw
+  RefreshCw,
+  LogOut,
+  UserCircle,
+  Shield,
+  Eye,
+  EyeOff,
+  Moon,
+  Sun,
+  Globe,
+  Volume2,
+  Mail,
+  Check,
+  AlertTriangle,
+  TrendingUpIcon
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Area, AreaChart } from 'recharts';
 
