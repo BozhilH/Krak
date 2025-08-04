@@ -1446,6 +1446,354 @@ const AdminKYCApplicantDetail = ({ applicantId, onBack }) => {
   );
 };
 
+// Manual KYC Management Component (for transactions under 250 EUR)
+const ManualKYCManagement = ({ user }) => {
+  const [manualKycRequests, setManualKycRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+
+  useEffect(() => {
+    fetchManualKycRequests();
+  }, [statusFilter]);
+
+  const fetchManualKycRequests = async () => {
+    try {
+      // Mock data for manual KYC requests (transactions under 250 EUR)
+      // In production, this would fetch from your backend
+      const mockRequests = [
+        {
+          id: 'manual_001',
+          client_id: 'user_12345',
+          client_email: 'john.doe@example.com',
+          client_name: 'John Doe',
+          transaction_amount: 150.00,
+          transaction_currency: 'EUR',
+          transaction_type: 'withdrawal',
+          transaction_id: 'txn_001',
+          status: 'pending_review',
+          submitted_at: '2025-08-04T10:30:00Z',
+          documents: [
+            { type: 'government_id', filename: 'passport.jpg', uploaded_at: '2025-08-04T10:30:00Z' },
+            { type: 'selfie', filename: 'selfie.jpg', uploaded_at: '2025-08-04T10:31:00Z' }
+          ],
+          notes: 'Initial verification for first withdrawal'
+        },
+        {
+          id: 'manual_002',
+          client_id: 'user_12346',
+          client_email: 'maria.garcia@example.com',
+          client_name: 'Maria Garcia',
+          transaction_amount: 200.00,
+          transaction_currency: 'EUR',
+          transaction_type: 'deposit',
+          transaction_id: 'txn_002',
+          status: 'approved',
+          submitted_at: '2025-08-04T09:15:00Z',
+          approved_at: '2025-08-04T10:00:00Z',
+          approved_by: 'admin',
+          documents: [
+            { type: 'government_id', filename: 'drivers_license.jpg', uploaded_at: '2025-08-04T09:15:00Z' }
+          ],
+          notes: 'Standard verification passed'
+        }
+      ];
+
+      // Add more mock data
+      for (let i = 3; i <= 15; i++) {
+        mockRequests.push({
+          id: `manual_${i.toString().padStart(3, '0')}`,
+          client_id: `user_${12344 + i}`,
+          client_email: `user${i}@example.com`,
+          client_name: `User ${i}`,
+          transaction_amount: Math.random() * 200 + 50, // Random amount under 250
+          transaction_currency: 'EUR',
+          transaction_type: ['withdrawal', 'deposit'][Math.floor(Math.random() * 2)],
+          transaction_id: `txn_${i.toString().padStart(3, '0')}`,
+          status: ['pending_review', 'approved', 'rejected', 'requires_documents'][Math.floor(Math.random() * 4)],
+          submitted_at: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
+          documents: [
+            { type: 'government_id', filename: `id_${i}.jpg`, uploaded_at: new Date().toISOString() }
+          ],
+          notes: `Manual KYC for user ${i}`
+        });
+      }
+
+      // Filter by status if specified
+      let filteredRequests = mockRequests;
+      if (statusFilter) {
+        filteredRequests = mockRequests.filter(req => req.status === statusFilter);
+      }
+
+      setManualKycRequests(filteredRequests);
+    } catch (error) {
+      console.error('Error fetching manual KYC requests:', error);
+    }
+    setLoading(false);
+  };
+
+  const handleApproval = async (requestId) => {
+    try {
+      // In production, this would call your backend API
+      setManualKycRequests(prev => prev.map(req => 
+        req.id === requestId 
+          ? { ...req, status: 'approved', approved_at: new Date().toISOString(), approved_by: user.username }
+          : req
+      ));
+      alert('Manual KYC request approved successfully!');
+    } catch (error) {
+      console.error('Error approving manual KYC:', error);
+    }
+  };
+
+  const handleRejection = async (requestId, reason) => {
+    try {
+      // In production, this would call your backend API
+      setManualKycRequests(prev => prev.map(req => 
+        req.id === requestId 
+          ? { ...req, status: 'rejected', rejected_at: new Date().toISOString(), rejected_by: user.username, rejection_reason: reason }
+          : req
+      ));
+      alert('Manual KYC request rejected successfully!');
+    } catch (error) {
+      console.error('Error rejecting manual KYC:', error);
+    }
+  };
+
+  const handleRequestDocuments = async (requestId, documents) => {
+    try {
+      // In production, this would call your backend API
+      setManualKycRequests(prev => prev.map(req => 
+        req.id === requestId 
+          ? { ...req, status: 'requires_documents', documents_requested: documents, requested_at: new Date().toISOString() }
+          : req
+      ));
+      alert('Additional documents requested successfully!');
+    } catch (error) {
+      console.error('Error requesting documents:', error);
+    }
+  };
+
+  const filteredRequests = manualKycRequests.filter(req =>
+    req.client_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    req.client_email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    req.id.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-center h-64">
+          <RefreshCw className="w-8 h-8 animate-spin text-gray-400" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-white">Manual KYC Management</h1>
+        <p className="text-gray-400">Verification requests for transactions under €250</p>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-gray-800 rounded-lg p-6 mb-6">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div>
+              <input
+                type="text"
+                placeholder="Search by name, email, or ID..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 w-64"
+              />
+            </div>
+            <div>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white"
+              >
+                <option value="">All Status</option>
+                <option value="pending_review">Pending Review</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+                <option value="requires_documents">Requires Documents</option>
+              </select>
+            </div>
+          </div>
+          <div className="text-sm text-gray-400">
+            Showing {filteredRequests.length} of {manualKycRequests.length} requests
+          </div>
+        </div>
+      </div>
+
+      {/* Manual KYC Requests Table */}
+      <div className="bg-gray-800 rounded-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-700">
+              <tr>
+                <th className="text-left p-4 font-medium text-gray-300">Request ID</th>
+                <th className="text-left p-4 font-medium text-gray-300">Client</th>
+                <th className="text-left p-4 font-medium text-gray-300">Transaction</th>
+                <th className="text-left p-4 font-medium text-gray-300">Amount</th>
+                <th className="text-left p-4 font-medium text-gray-300">Status</th>
+                <th className="text-left p-4 font-medium text-gray-300">Submitted</th>
+                <th className="text-left p-4 font-medium text-gray-300">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-700">
+              {filteredRequests.map((request) => (
+                <tr key={request.id} className="hover:bg-gray-700">
+                  <td className="p-4">
+                    <div className="font-mono text-sm text-white">{request.id}</div>
+                  </td>
+                  <td className="p-4">
+                    <div>
+                      <div className="font-medium text-white">{request.client_name}</div>
+                      <div className="text-sm text-gray-400">{request.client_email}</div>
+                    </div>
+                  </td>
+                  <td className="p-4">
+                    <div>
+                      <div className="text-white">{request.transaction_type}</div>
+                      <div className="text-sm text-gray-400 font-mono">{request.transaction_id}</div>
+                    </div>
+                  </td>
+                  <td className="p-4">
+                    <div className="font-medium text-white">
+                      €{request.transaction_amount.toFixed(2)}
+                    </div>
+                  </td>
+                  <td className="p-4">
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                      request.status === 'approved' ? 'bg-green-600 text-white' :
+                      request.status === 'pending_review' ? 'bg-yellow-600 text-white' :
+                      request.status === 'rejected' ? 'bg-red-600 text-white' :
+                      request.status === 'requires_documents' ? 'bg-orange-600 text-white' :
+                      'bg-gray-600 text-white'
+                    }`}>
+                      {request.status.replace(/_/g, ' ').toUpperCase()}
+                    </span>
+                  </td>
+                  <td className="p-4 text-sm text-gray-400">
+                    {new Date(request.submitted_at).toLocaleDateString()}
+                  </td>
+                  <td className="p-4">
+                    <div className="flex space-x-2">
+                      {request.status === 'pending_review' && (
+                        <>
+                          <button
+                            onClick={() => handleApproval(request.id)}
+                            className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-sm"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => handleRejection(request.id, 'Manual review failed')}
+                            className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm"
+                          >
+                            Reject
+                          </button>
+                          <button
+                            onClick={() => handleRequestDocuments(request.id, ['additional_proof'])}
+                            className="px-3 py-1 bg-orange-600 hover:bg-orange-700 text-white rounded text-sm"
+                          >
+                            Request Docs
+                          </button>
+                        </>
+                      )}
+                      <button className="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm">
+                        View Details
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {filteredRequests.length === 0 && (
+        <div className="bg-gray-800 rounded-lg p-8 text-center">
+          <Shield className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-white mb-2">No Manual KYC Requests</h3>
+          <p className="text-gray-400">No verification requests found matching your criteria.</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// KYC Main View Component (Router for KYC sections)
+const AdminKYCManagement = ({ user }) => {
+  const [kycView, setKycView] = useState('dashboard');
+
+  return (
+    <div className="min-h-screen bg-gray-900">
+      {/* KYC Navigation Tabs */}
+      <div className="border-b border-gray-700 bg-gray-800">
+        <div className="px-6">
+          <nav className="flex space-x-8">
+            <button
+              onClick={() => setKycView('dashboard')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                kycView === 'dashboard'
+                  ? 'border-teal-500 text-teal-400'
+                  : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-300'
+              }`}
+            >
+              KYC Dashboard
+            </button>
+            <button
+              onClick={() => setKycView('manual')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                kycView === 'manual'
+                  ? 'border-teal-500 text-teal-400'
+                  : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-300'
+              }`}
+            >
+              Manual KYC (&lt;€250)
+            </button>
+            <button
+              onClick={() => setKycView('sumsub')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                kycView === 'sumsub'
+                  ? 'border-teal-500 text-teal-400'
+                  : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-300'
+              }`}
+            >
+              Sum-Sub Integration
+            </button>
+            <button
+              onClick={() => setKycView('applicants')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                kycView === 'applicants'
+                  ? 'border-teal-500 text-teal-400'
+                  : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-300'
+              }`}
+            >
+              All Applicants
+            </button>
+          </nav>
+        </div>
+      </div>
+
+      {/* KYC Content */}
+      <div className="flex-1">
+        {kycView === 'dashboard' && <AdminKYCDashboard user={user} />}
+        {kycView === 'manual' && <ManualKYCManagement user={user} />}
+        {kycView === 'sumsub' && <AdminKYCDashboard user={user} />}
+        {kycView === 'applicants' && <AdminKYCApplicants user={user} />}
+      </div>
+    </div>
+  );
+};
+
 // Admin Main Component
 const AdminPanel = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
