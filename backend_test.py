@@ -1182,6 +1182,18 @@ class BackendTester:
             ("Role-Based Access Control", self.test_role_based_access_control)
         ]
         
+        # Sum-Sub KYC Tests
+        sumsub_tests = [
+            ("Sum-Sub Dashboard", self.test_sumsub_dashboard),
+            ("Sum-Sub Applicants List", self.test_sumsub_applicants_list),
+            ("Sum-Sub Applicant Detail", self.test_sumsub_applicant_detail),
+            ("Sum-Sub Approve Applicant", self.test_sumsub_approve_applicant),
+            ("Sum-Sub Reject Applicant", self.test_sumsub_reject_applicant),
+            ("Sum-Sub Request Info", self.test_sumsub_request_info),
+            ("Sum-Sub Webhook Logs", self.test_sumsub_webhook_logs),
+            ("Sum-Sub Role Access", self.test_sumsub_role_access)
+        ]
+        
         # Kraken API Tests
         kraken_tests = [
             ("Root Endpoint", self.test_root_endpoint),
