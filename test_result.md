@@ -120,6 +120,18 @@ backend:
         agent: "testing"
         comment: "✅ COMPREHENSIVE TESTING COMPLETED: All Kraken API integration endpoints are fully functional! Tested 10/10 endpoints successfully: 1) Root API endpoint accessible, 2) Single ticker endpoints working for all major pairs (BTCUSD: $114,437.3, ETHUSD: $3,545.0, XRPUSD: $3.0123, ADAUSD: $0.7396, DOTUSD: $3.6207), 3) Multiple tickers endpoint retrieving data for multiple pairs simultaneously, 4) Order book endpoint returning 100 asks/bids with proper structure, 5) OHLC endpoint providing 720 candlestick entries, 6) Recent trades endpoint returning 1000 trade records, 7) Assets endpoint retrieving 541 available assets, 8) Asset pairs endpoint returning 1136 trading pairs, 9) Market summary endpoint (KEY for dashboard) providing formatted data for 5 major pairs, 10) Error handling properly returning HTTP 500 for invalid pairs. All endpoints respond within reasonable time (0.04s-0.68s). Real-time data integration with Kraken API confirmed working."
 
+  - task: "Sum-Sub KYC API integration backend endpoints"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Sum-Sub KYC backend integration already implemented with mock data. Endpoints include: /api/admin/sumsub/dashboard (KYC stats), /api/admin/sumsub/applicants (list with filters), /api/admin/sumsub/applicants/{id} (details), /api/admin/sumsub/applicants/{id}/approve (approve), /api/admin/sumsub/applicants/{id}/reject (reject), /api/admin/sumsub/applicants/{id}/request-info (request more info), /api/admin/sumsub/webhook-logs (webhook logs). Ready for testing with new frontend integration."
+
   - task: "Admin Panel Authentication System"
     implemented: true
     working: true
