@@ -43,6 +43,180 @@ async def get_http_session():
         http_session = aiohttp.ClientSession()
     return http_session
 
+# Admin Models and Enums
+class UserRole(str, Enum):
+    ADMIN = "admin"
+    SUPPORT = "support"
+    KYC = "kyc"
+
+class TicketStatus(str, Enum):
+    OPEN = "open"
+    IN_PROGRESS = "in_progress"
+    RESOLVED = "resolved"
+    CLOSED = "closed"
+
+class TicketPriority(str, Enum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    URGENT = "urgent"
+
+class TransactionStatus(str, Enum):
+    PENDING = "pending"
+    CONFIRMED = "confirmed"
+    REJECTED = "rejected"
+    PROCESSING = "processing"
+
+class KYCStatus(str, Enum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+    REQUIRES_REVIEW = "requires_review"
+
+# Admin User Models
+class AdminUser(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    username: str
+    email: str
+    role: UserRole
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    last_login: Optional[datetime] = None
+
+class AdminUserCreate(BaseModel):
+    username: str
+    email: str
+    password: str
+    role: UserRole
+
+class AdminLogin(BaseModel):
+    username: str
+    password: str
+
+class AdminLoginResponse(BaseModel):
+    access_token: str
+    token_type: str
+    user: AdminUser
+
+# Client Management Models
+class Client(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    email: str
+    first_name: str
+    last_name: str
+    phone: Optional[str] = None
+    country: Optional[str] = None
+    kyc_status: KYCStatus = KYCStatus.PENDING
+    is_verified: bool = False
+    is_active: bool = True
+    total_balance: float = 0.0
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    last_activity: Optional[datetime] = None
+
+class ClientUpdate(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    phone: Optional[str] = None
+    country: Optional[str] = None
+    kyc_status: Optional[KYCStatus] = None
+    is_verified: Optional[bool] = None
+    is_active: Optional[bool] = None
+
+# Support Ticket Models
+class SupportTicket(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    client_id: str
+    client_email: str
+    subject: str
+    category: str
+    message: str
+    status: TicketStatus = TicketStatus.OPEN
+    priority: TicketPriority = TicketPriority.MEDIUM
+    assigned_to: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    resolved_at: Optional[datetime] = None
+
+class TicketUpdate(BaseModel):
+    status: Optional[TicketStatus] = None
+    priority: Optional[TicketPriority] = None
+    assigned_to: Optional[str] = None
+
+class TicketResponse(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    ticket_id: str
+    admin_user_id: str
+    admin_username: str
+    message: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+# Transaction Models
+class Transaction(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    client_id: str
+    client_email: str
+    type: str  # 'deposit' or 'withdrawal'
+    asset: str
+    amount: float
+    status: TransactionStatus = TransactionStatus.PENDING
+    method: Optional[str] = None
+    address: Optional[str] = None
+    transaction_hash: Optional[str] = None
+    fee: float = 0.0
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    processed_at: Optional[datetime] = None
+    notes: Optional[str] = None
+
+class TransactionUpdate(BaseModel):
+    status: Optional[TransactionStatus] = None
+    transaction_hash: Optional[str] = None
+    notes: Optional[str] = None
+
+# JWT Configuration
+SECRET_KEY = "your-secret-key-here"  # In production, use environment variable
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 480  # 8 hours
+
+security = HTTPBearer()
+
+# Authentication Functions
+def hash_password(password: str) -> str:
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return hash_password(plain_password) == hashed_password
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    try:
+        payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        role: str = payload.get("role")
+        if username is None:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        return {"username": username, "role": role}
+    except jwt.PyJWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+async def verify_admin(token_data: dict = Depends(verify_token)):
+    if token_data["role"] not in ["admin", "support", "kyc"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    return token_data
+
+async def verify_admin_only(token_data: dict = Depends(verify_token)):
+    if token_data["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return token_data
+
 # Define Models
 class StatusCheck(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
