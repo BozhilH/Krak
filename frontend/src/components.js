@@ -400,6 +400,9 @@ const AdminDashboard = ({ user }) => {
         </div>
       </div>
     </div>
+  );
+};
+
 // Client Management Component
 const AdminClients = ({ user }) => {
   const [clients, setClients] = useState([]);
