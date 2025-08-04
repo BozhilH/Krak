@@ -172,6 +172,11 @@ class TransactionUpdate(BaseModel):
     transaction_hash: Optional[str] = None
     notes: Optional[str] = None
 
+# Sum-Sub KYC Models
+class SumSubRequestInfo(BaseModel):
+    requested_documents: List[str]
+    comment: Optional[str] = None
+
 # JWT Configuration
 SECRET_KEY = "your-secret-key-here"  # In production, use environment variable
 ALGORITHM = "HS256"
