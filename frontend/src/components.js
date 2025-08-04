@@ -147,7 +147,7 @@ const Dashboard = ({ marketData, loading, setCurrentView, setSelectedPair }) => 
             backgroundPosition: 'center'
           }}
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-900/80 to-blue-900/80"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-900/80 to-cyan-900/80"></div>
         </div>
         <div className="relative p-8 text-white">
           <h1 className="text-4xl font-bold mb-2">Trade Crypto Like a Pro</h1>
