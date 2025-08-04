@@ -238,7 +238,7 @@ const NotificationsDropdown = ({ isOpen, onClose }) => {
 };
 
 // User Profile Component
-const UserDropdown = ({ isOpen, onClose }) => {
+const UserDropdown = ({ isOpen, onClose, setCurrentView }) => {
   const [user] = useState({
     name: 'John Doe',
     email: 'john.doe@example.com',
@@ -247,6 +247,11 @@ const UserDropdown = ({ isOpen, onClose }) => {
     balance: '$125,430.50',
     verified: true
   });
+
+  const handleNavigation = (view) => {
+    setCurrentView(view);
+    onClose();
+  };
 
   if (!isOpen) return null;
 
@@ -283,21 +288,47 @@ const UserDropdown = ({ isOpen, onClose }) => {
 
       {/* Menu Items */}
       <div className="py-2">
-        <button className="w-full px-4 py-3 text-left hover:bg-gray-700 flex items-center space-x-3">
+        <button 
+          onClick={() => handleNavigation('profile')}
+          className="w-full px-4 py-3 text-left hover:bg-gray-700 flex items-center space-x-3"
+        >
           <UserCircle className="w-5 h-5 text-gray-400" />
           <span className="text-white">Profile Settings</span>
         </button>
-        <button className="w-full px-4 py-3 text-left hover:bg-gray-700 flex items-center space-x-3">
+        <button 
+          onClick={() => handleNavigation('wallet')}
+          className="w-full px-4 py-3 text-left hover:bg-gray-700 flex items-center space-x-3"
+        >
           <Wallet className="w-5 h-5 text-gray-400" />
           <span className="text-white">Wallet</span>
         </button>
-        <button className="w-full px-4 py-3 text-left hover:bg-gray-700 flex items-center space-x-3">
+        <button 
+          onClick={() => handleNavigation('security')}
+          className="w-full px-4 py-3 text-left hover:bg-gray-700 flex items-center space-x-3"
+        >
           <Shield className="w-5 h-5 text-gray-400" />
           <span className="text-white">Security</span>
         </button>
-        <button className="w-full px-4 py-3 text-left hover:bg-gray-700 flex items-center space-x-3">
+        <button 
+          onClick={() => handleNavigation('support')}
+          className="w-full px-4 py-3 text-left hover:bg-gray-700 flex items-center space-x-3"
+        >
           <Mail className="w-5 h-5 text-gray-400" />
           <span className="text-white">Support</span>
+        </button>
+        <button 
+          onClick={() => handleNavigation('deposit')}
+          className="w-full px-4 py-3 text-left hover:bg-gray-700 flex items-center space-x-3"
+        >
+          <Plus className="w-5 h-5 text-gray-400" />
+          <span className="text-white">Deposit</span>
+        </button>
+        <button 
+          onClick={() => handleNavigation('withdraw')}
+          className="w-full px-4 py-3 text-left hover:bg-gray-700 flex items-center space-x-3"
+        >
+          <Minus className="w-5 h-5 text-gray-400" />
+          <span className="text-white">Withdraw</span>
         </button>
         <div className="border-t border-gray-700 mt-2">
           <button className="w-full px-4 py-3 text-left hover:bg-gray-700 flex items-center space-x-3 text-red-400">
