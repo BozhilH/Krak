@@ -94,7 +94,9 @@ function App() {
     <div className="App bg-gray-900 text-white min-h-screen">
       <Header 
         currentView={currentView} 
-        setCurrentView={setCurrentView} 
+        setCurrentView={setCurrentView}
+        setSelectedPair={setSelectedPair}
+        marketData={marketData}
       />
       
       <main className="min-h-screen">
