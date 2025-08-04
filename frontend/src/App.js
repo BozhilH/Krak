@@ -164,6 +164,10 @@ function App() {
         {currentView === 'withdraw' && (
           <WithdrawPage />
         )}
+
+        {currentView === 'about' && (
+          <AboutUs />
+        )}
       </main>
     </div>
   );
