@@ -512,7 +512,7 @@ const TradingForm = ({
         <button
           onClick={() => setOrderType('market')}
           className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-            orderType === 'market' ? 'bg-purple-600 text-white' : 'text-gray-300 hover:text-white'
+            orderType === 'market' ? 'bg-teal-600 text-white' : 'text-gray-300 hover:text-white'
           }`}
         >
           Market
