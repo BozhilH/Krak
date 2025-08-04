@@ -9,7 +9,13 @@ const {
   MarketData,
   Portfolio,
   OrderBook,
-  TradingForm
+  TradingForm,
+  ProfileSettings,
+  WalletPage,
+  SecurityPage,
+  SupportPage,
+  DepositPage,
+  WithdrawPage
 } = Components;
 
 function App() {
