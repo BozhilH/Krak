@@ -310,7 +310,237 @@ async def get_status_checks():
     status_checks = await db.status_checks.find().to_list(1000)
     return [StatusCheck(**status_check) for status_check in status_checks]
 
-# Kraken API Endpoints
+# Admin Authentication Endpoints
+@api_router.post("/admin/login", response_model=AdminLoginResponse)
+async def admin_login(login_data: AdminLogin):
+    try:
+        # In production, get from database
+        # For demo, using hardcoded admin users
+        admin_users = {
+            "admin": {"password": hash_password("admin123"), "role": "admin", "email": "admin@cryptoox.com"},
+            "support": {"password": hash_password("support123"), "role": "support", "email": "support@cryptoox.com"},
+            "kyc_agent": {"password": hash_password("kyc123"), "role": "kyc", "email": "kyc@cryptoox.com"}
+        }
+        
+        user_data = admin_users.get(login_data.username)
+        if not user_data or not verify_password(login_data.password, user_data["password"]):
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        
+        access_token = create_access_token(data={"sub": login_data.username, "role": user_data["role"]})
+        
+        admin_user = AdminUser(
+            username=login_data.username,
+            email=user_data["email"],
+            role=user_data["role"],
+            last_login=datetime.utcnow()
+        )
+        
+        return AdminLoginResponse(
+            access_token=access_token,
+            token_type="bearer",
+            user=admin_user
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Client Management Endpoints
+@api_router.get("/admin/clients", dependencies=[Depends(verify_admin)])
+async def get_clients(skip: int = 0, limit: int = 50):
+    try:
+        # Mock client data - in production, fetch from database
+        clients = []
+        for i in range(20):
+            client = Client(
+                email=f"user{i+1}@example.com",
+                first_name=f"John{i+1}",
+                last_name=f"Doe{i+1}",
+                phone=f"+1555{i:03d}{i:04d}",
+                country="United States" if i % 3 == 0 else "Canada" if i % 3 == 1 else "United Kingdom",
+                kyc_status=KYCStatus.APPROVED if i % 4 == 0 else KYCStatus.PENDING if i % 4 == 1 else KYCStatus.REQUIRES_REVIEW,
+                is_verified=i % 4 == 0,
+                total_balance=float(1000 + i * 500),
+                last_activity=datetime.utcnow() - timedelta(days=i)
+            )
+            clients.append(client)
+        
+        return {"clients": clients[skip:skip+limit], "total": len(clients)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/admin/clients/{client_id}", dependencies=[Depends(verify_admin)])
+async def get_client(client_id: str):
+    try:
+        # Mock client data - in production, fetch from database
+        client = Client(
+            id=client_id,
+            email="john.doe@example.com",
+            first_name="John",
+            last_name="Doe",
+            phone="+1555123456",
+            country="United States",
+            kyc_status=KYCStatus.APPROVED,
+            is_verified=True,
+            total_balance=15000.50,
+            last_activity=datetime.utcnow() - timedelta(hours=2)
+        )
+        return client
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.put("/admin/clients/{client_id}", dependencies=[Depends(verify_admin)])
+async def update_client(client_id: str, update_data: ClientUpdate):
+    try:
+        # In production, update database
+        updated_client = Client(
+            id=client_id,
+            email="john.doe@example.com",
+            first_name=update_data.first_name or "John",
+            last_name=update_data.last_name or "Doe",
+            phone=update_data.phone or "+1555123456",
+            country=update_data.country or "United States",
+            kyc_status=update_data.kyc_status or KYCStatus.APPROVED,
+            is_verified=update_data.is_verified if update_data.is_verified is not None else True,
+            is_active=update_data.is_active if update_data.is_active is not None else True,
+            total_balance=15000.50,
+            last_activity=datetime.utcnow()
+        )
+        return updated_client
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Support Ticket Management
+@api_router.get("/admin/tickets", dependencies=[Depends(verify_admin)])
+async def get_support_tickets(status: Optional[str] = None, skip: int = 0, limit: int = 50):
+    try:
+        # Mock ticket data
+        tickets = []
+        statuses = [TicketStatus.OPEN, TicketStatus.IN_PROGRESS, TicketStatus.RESOLVED, TicketStatus.CLOSED]
+        priorities = [TicketPriority.LOW, TicketPriority.MEDIUM, TicketPriority.HIGH, TicketPriority.URGENT]
+        
+        for i in range(25):
+            ticket = SupportTicket(
+                client_id=f"client_{i+1}",
+                client_email=f"user{i+1}@example.com",
+                subject=f"Support Request #{i+1}" if i % 4 == 0 else f"Account Issue #{i+1}" if i % 4 == 1 else f"Trading Problem #{i+1}" if i % 4 == 2 else f"KYC Question #{i+1}",
+                category="technical" if i % 4 == 0 else "account" if i % 4 == 1 else "trading" if i % 4 == 2 else "kyc",
+                message=f"This is a support request message for ticket #{i+1}. The user is experiencing issues and needs assistance.",
+                status=statuses[i % 4],
+                priority=priorities[i % 4],
+                assigned_to="support" if i % 3 == 0 else "kyc_agent" if i % 3 == 1 else None,
+                created_at=datetime.utcnow() - timedelta(days=i, hours=i),
+                updated_at=datetime.utcnow() - timedelta(hours=i),
+                resolved_at=datetime.utcnow() - timedelta(hours=i//2) if statuses[i % 4] == TicketStatus.RESOLVED else None
+            )
+            tickets.append(ticket)
+        
+        if status:
+            tickets = [t for t in tickets if t.status == status]
+        
+        return {"tickets": tickets[skip:skip+limit], "total": len(tickets)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.put("/admin/tickets/{ticket_id}", dependencies=[Depends(verify_admin)])
+async def update_support_ticket(ticket_id: str, update_data: TicketUpdate, current_user=Depends(verify_admin)):
+    try:
+        # Mock update - in production, update database
+        updated_ticket = SupportTicket(
+            id=ticket_id,
+            client_id="client_1",
+            client_email="user1@example.com",
+            subject="Support Request #1",
+            category="technical",
+            message="This is a support request message.",
+            status=update_data.status or TicketStatus.IN_PROGRESS,
+            priority=update_data.priority or TicketPriority.MEDIUM,
+            assigned_to=update_data.assigned_to or current_user["username"],
+            updated_at=datetime.utcnow(),
+            resolved_at=datetime.utcnow() if update_data.status == TicketStatus.RESOLVED else None
+        )
+        return updated_ticket
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Transaction Management
+@api_router.get("/admin/transactions", dependencies=[Depends(verify_admin)])
+async def get_transactions(transaction_type: Optional[str] = None, status: Optional[str] = None, skip: int = 0, limit: int = 50):
+    try:
+        # Mock transaction data
+        transactions = []
+        assets = ["BTC", "ETH", "XRP", "ADA", "DOT"]
+        methods = ["bank_transfer", "credit_card", "sepa", "easypay"]
+        
+        for i in range(30):
+            is_deposit = i % 2 == 0
+            transaction = Transaction(
+                client_id=f"client_{i+1}",
+                client_email=f"user{i+1}@example.com",
+                type="deposit" if is_deposit else "withdrawal",
+                asset=assets[i % len(assets)],
+                amount=float(100 + i * 50),
+                status=TransactionStatus.CONFIRMED if i % 4 == 0 else TransactionStatus.PENDING if i % 4 == 1 else TransactionStatus.PROCESSING,
+                method=methods[i % len(methods)] if is_deposit else None,
+                address=f"1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa{i}" if not is_deposit else None,
+                transaction_hash=f"0x{i:064d}" if i % 3 == 0 else None,
+                fee=float(i * 0.5),
+                created_at=datetime.utcnow() - timedelta(days=i, hours=i),
+                processed_at=datetime.utcnow() - timedelta(hours=i) if i % 4 == 0 else None,
+                notes=f"Transaction #{i+1} notes" if i % 5 == 0 else None
+            )
+            transactions.append(transaction)
+        
+        if transaction_type:
+            transactions = [t for t in transactions if t.type == transaction_type]
+        if status:
+            transactions = [t for t in transactions if t.status == status]
+        
+        return {"transactions": transactions[skip:skip+limit], "total": len(transactions)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.put("/admin/transactions/{transaction_id}", dependencies=[Depends(verify_admin_only)])
+async def update_transaction(transaction_id: str, update_data: TransactionUpdate):
+    try:
+        # Mock update - in production, update database
+        updated_transaction = Transaction(
+            id=transaction_id,
+            client_id="client_1",
+            client_email="user1@example.com",
+            type="deposit",
+            asset="BTC",
+            amount=1000.0,
+            status=update_data.status or TransactionStatus.CONFIRMED,
+            method="bank_transfer",
+            transaction_hash=update_data.transaction_hash,
+            fee=5.0,
+            processed_at=datetime.utcnow() if update_data.status == TransactionStatus.CONFIRMED else None,
+            notes=update_data.notes
+        )
+        return updated_transaction
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Admin Dashboard Stats
+@api_router.get("/admin/dashboard/stats", dependencies=[Depends(verify_admin)])
+async def get_dashboard_stats():
+    try:
+        stats = {
+            "total_clients": 1245,
+            "active_clients": 892,
+            "pending_kyc": 123,
+            "open_tickets": 45,
+            "pending_deposits": 23,
+            "pending_withdrawals": 18,
+            "total_volume_24h": 2450000.50,
+            "total_fees_24h": 12250.75,
+            "new_registrations_today": 15,
+            "resolved_tickets_today": 12
+        }
+        return stats
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Asset Pairs
 @api_router.get("/ticker/{pair}")
 async def get_ticker(pair: str):
     """Get ticker information for a specific trading pair"""
