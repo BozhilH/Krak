@@ -590,12 +590,13 @@ const AdminHeader = ({ user, currentView, setCurrentView, onLogout }) => {
 // Admin Sidebar Component
 const AdminSidebar = ({ user, currentView, setCurrentView }) => {
   const adminMenuItems = [
-    { id: 'admin-dashboard', label: 'Dashboard', icon: BarChart3, roles: ['admin', 'support', 'kyc'] },
+    { id: 'admin-dashboard', label: 'Dashboard', icon: BarChart3, roles: ['admin', 'support', 'kyc', 'accounting'] },
     { id: 'admin-clients', label: 'Clients', icon: Users, roles: ['admin', 'support', 'kyc'] },
     { id: 'admin-tickets', label: 'Support Tickets', icon: MessageSquare, roles: ['admin', 'support'] },
     { id: 'admin-kyc', label: 'KYC Management', icon: Shield, roles: ['admin', 'support', 'kyc'] },
     { id: 'admin-atm', label: 'ATM Management', icon: MapPin, roles: ['admin'] },
     { id: 'admin-liquidity', label: 'Liquidity Management', icon: Database, roles: ['admin'] },
+    { id: 'admin-accounting', label: 'Financial Dashboard', icon: Calculator, roles: ['admin', 'accounting'] },
     { id: 'admin-deposits', label: 'Deposits', icon: ArrowDownRight, roles: ['admin'] },
     { id: 'admin-withdrawals', label: 'Withdrawals', icon: ArrowUpRight, roles: ['admin'] },
     { id: 'admin-transactions', label: 'All Transactions', icon: Activity, roles: ['admin'] },
