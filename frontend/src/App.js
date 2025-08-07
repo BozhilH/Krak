@@ -18,7 +18,8 @@ const {
   WithdrawPage,
   Footer,
   AboutUs,
-  AdminPanel
+  AdminPanel,
+  ATMLocator
 } = Components;
 
 function App() {
