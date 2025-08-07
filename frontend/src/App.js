@@ -178,6 +178,10 @@ function App() {
         {currentView === 'about' && (
           <AboutUs />
         )}
+
+        {currentView === 'atm-locator' && (
+          <ATMLocator />
+        )}
       </main>
 
       <Footer setCurrentView={setCurrentView} />
