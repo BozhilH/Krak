@@ -55,6 +55,381 @@ import {
   Signal
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Area, AreaChart } from 'recharts';
+
+// ATM Locator Component
+const ATMLocator = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedATM, setSelectedATM] = useState(null);
+  const [userLocation, setUserLocation] = useState(null);
+  const [viewMode, setViewMode] = useState('list'); // 'list' or 'map'
+  
+  // Mock ATM data with locations
+  const [atmData] = useState([
+    {
+      id: 'atm_001',
+      name: 'CryptoOX ATM - Downtown Mall',
+      address: '123 Main Street, New York, NY 10001',
+      coordinates: { lat: 40.7128, lng: -74.0060 },
+      status: 'online',
+      supported_coins: ['BTC', 'ETH', 'XRP'],
+      fees: { buy: 5.5, sell: 4.5 },
+      cash_available: 75000,
+      last_maintenance: '2025-01-10T10:00:00Z',
+      daily_volume: 125000,
+      rating: 4.8,
+      reviews: 124,
+      hours: '24/7',
+      features: ['contactless', 'cash_deposit', 'receipt_printing']
+    },
+    {
+      id: 'atm_002', 
+      name: 'CryptoOX ATM - Financial District',
+      address: '456 Wall Street, New York, NY 10005',
+      coordinates: { lat: 40.7074, lng: -74.0113 },
+      status: 'online',
+      supported_coins: ['BTC', 'ETH', 'XRP'],
+      fees: { buy: 5.0, sell: 4.0 },
+      cash_available: 92000,
+      last_maintenance: '2025-01-09T14:30:00Z',
+      daily_volume: 189000,
+      rating: 4.9,
+      reviews: 256,
+      hours: '6:00 AM - 10:00 PM',
+      features: ['contactless', 'cash_deposit', 'receipt_printing', 'multilingual']
+    },
+    {
+      id: 'atm_003',
+      name: 'CryptoOX ATM - Times Square',
+      address: '789 Broadway, New York, NY 10019',
+      coordinates: { lat: 40.7580, lng: -73.9855 },
+      status: 'maintenance',
+      supported_coins: ['BTC', 'ETH', 'XRP'],
+      fees: { buy: 6.0, sell: 5.0 },
+      cash_available: 0,
+      last_maintenance: '2025-01-10T08:00:00Z',
+      daily_volume: 0,
+      rating: 4.6,
+      reviews: 89,
+      hours: '24/7',
+      features: ['contactless', 'receipt_printing']
+    },
+    {
+      id: 'atm_004',
+      name: 'CryptoOX ATM - Central Park West',
+      address: '321 Central Park West, New York, NY 10025',
+      coordinates: { lat: 40.7829, lng: -73.9654 },
+      status: 'online',
+      supported_coins: ['BTC', 'ETH', 'XRP'],
+      fees: { buy: 5.2, sell: 4.2 },
+      cash_available: 68000,
+      last_maintenance: '2025-01-08T12:00:00Z',
+      daily_volume: 98000,
+      rating: 4.7,
+      reviews: 178,
+      hours: '24/7',
+      features: ['contactless', 'cash_deposit', 'receipt_printing']
+    },
+    {
+      id: 'atm_005',
+      name: 'CryptoOX ATM - Brooklyn Bridge',
+      address: '654 Brooklyn Bridge Blvd, Brooklyn, NY 11201',
+      coordinates: { lat: 40.6892, lng: -73.9956 },
+      status: 'low_cash',
+      supported_coins: ['BTC', 'ETH'],
+      fees: { buy: 5.8, sell: 4.8 },
+      cash_available: 15000,
+      last_maintenance: '2025-01-07T16:00:00Z',
+      daily_volume: 67000,
+      rating: 4.5,
+      reviews: 92,
+      hours: '8:00 AM - 8:00 PM',
+      features: ['contactless', 'receipt_printing']
+    }
+  ]);
+
+  const [filteredATMs, setFilteredATMs] = useState(atmData);
+
+  useEffect(() => {
+    // Get user location (mock for now)
+    setUserLocation({ lat: 40.7128, lng: -74.0060 });
+    
+    // Filter ATMs based on search
+    if (searchQuery) {
+      const filtered = atmData.filter(atm =>
+        atm.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        atm.address.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredATMs(filtered);
+    } else {
+      setFilteredATMs(atmData);
+    }
+  }, [searchQuery]);
+
+  const calculateDistance = (atm) => {
+    if (!userLocation) return 0;
+    // Simple distance calculation (mock)
+    const lat1 = userLocation.lat;
+    const lon1 = userLocation.lng;
+    const lat2 = atm.coordinates.lat;
+    const lon2 = atm.coordinates.lng;
+    
+    const R = 6371; // km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const d = R * c;
+    
+    return Math.round(d * 10) / 10;
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'online': return 'text-green-400';
+      case 'maintenance': return 'text-red-400';
+      case 'low_cash': return 'text-yellow-400';
+      default: return 'text-gray-400';
+    }
+  };
+
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'online': return 'bg-green-600';
+      case 'maintenance': return 'bg-red-600';
+      case 'low_cash': return 'bg-yellow-600';
+      default: return 'bg-gray-600';
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-900 text-white">
+      {/* Header */}
+      <div className="bg-gray-800 border-b border-gray-700 sticky top-0 z-10">
+        <div className="px-4 py-4">
+          <h1 className="text-2xl font-bold text-white mb-2">ATM Locator</h1>
+          <p className="text-gray-400 text-sm mb-4">Find the nearest CryptoOX ATM</p>
+          
+          {/* Search and View Toggle */}
+          <div className="flex flex-col sm:flex-row gap-4 mb-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by location or address..."
+                className="w-full bg-gray-700 border border-gray-600 rounded-lg pl-10 pr-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              />
+            </div>
+            <div className="flex bg-gray-700 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('list')}
+                className={`px-4 py-1 rounded text-sm font-medium transition-colors ${
+                  viewMode === 'list' ? 'bg-teal-600 text-white' : 'text-gray-300'
+                }`}
+              >
+                List
+              </button>
+              <button
+                onClick={() => setViewMode('map')}
+                className={`px-4 py-1 rounded text-sm font-medium transition-colors ${
+                  viewMode === 'map' ? 'bg-teal-600 text-white' : 'text-gray-300'
+                }`}
+              >
+                Map
+              </button>
+            </div>
+          </div>
+          
+          {/* Stats */}
+          <div className="flex flex-wrap gap-4 text-sm">
+            <div className="flex items-center">
+              <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+              <span className="text-gray-300">{atmData.filter(a => a.status === 'online').length} Online</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-2 h-2 bg-yellow-400 rounded-full mr-2"></div>
+              <span className="text-gray-300">{atmData.filter(a => a.status === 'low_cash').length} Low Cash</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-2 h-2 bg-red-400 rounded-full mr-2"></div>
+              <span className="text-gray-300">{atmData.filter(a => a.status === 'maintenance').length} Maintenance</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-4">
+        {viewMode === 'map' && (
+          // Simple map placeholder
+          <div className="bg-gray-800 rounded-lg h-64 mb-6 flex items-center justify-center border-2 border-dashed border-gray-600">
+            <div className="text-center">
+              <MapPin className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+              <p className="text-gray-400">Interactive Map View</p>
+              <p className="text-gray-500 text-sm">Showing {filteredATMs.length} ATMs</p>
+            </div>
+          </div>
+        )}
+
+        {/* ATM List */}
+        <div className="space-y-4">
+          {filteredATMs.map((atm) => (
+            <div key={atm.id} className="bg-gray-800 rounded-lg p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="text-lg font-semibold text-white">{atm.name}</h3>
+                    <span className={`px-2 py-1 rounded text-xs font-medium text-white ${getStatusBadge(atm.status)}`}>
+                      {atm.status.replace('_', ' ').toUpperCase()}
+                    </span>
+                  </div>
+                  <p className="text-gray-400 text-sm mb-2 flex items-center">
+                    <MapPin className="w-4 h-4 mr-1" />
+                    {atm.address}
+                  </p>
+                  <p className="text-gray-400 text-sm mb-2">
+                    <Clock className="w-4 h-4 mr-1 inline" />
+                    {atm.hours}
+                  </p>
+                  <div className="flex items-center text-sm text-gray-400 mb-3">
+                    <Navigation className="w-4 h-4 mr-1" />
+                    <span>{calculateDistance(atm)} km away</span>
+                    <span className="mx-2">•</span>
+                    <Star className="w-4 h-4 mr-1 text-yellow-400" />
+                    <span>{atm.rating} ({atm.reviews} reviews)</span>
+                  </div>
+                </div>
+                
+                <div className="text-right sm:ml-4">
+                  <div className="text-sm text-gray-400 mb-1">Daily Volume</div>
+                  <div className="text-lg font-semibold text-white">${atm.daily_volume.toLocaleString()}</div>
+                </div>
+              </div>
+
+              {/* Supported Coins */}
+              <div className="mb-4">
+                <div className="text-sm text-gray-400 mb-2">Supported Cryptocurrencies</div>
+                <div className="flex flex-wrap gap-2">
+                  {atm.supported_coins.map(coin => (
+                    <span key={coin} className="px-2 py-1 bg-gray-700 text-teal-400 rounded text-xs font-medium">
+                      {coin}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Fees and Cash */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                <div>
+                  <div className="text-xs text-gray-400">Buy Fee</div>
+                  <div className="text-sm font-semibold text-white">{atm.fees.buy}%</div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-400">Sell Fee</div>
+                  <div className="text-sm font-semibold text-white">{atm.fees.sell}%</div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-400">Cash Available</div>
+                  <div className={`text-sm font-semibold ${atm.cash_available > 50000 ? 'text-green-400' : atm.cash_available > 20000 ? 'text-yellow-400' : 'text-red-400'}`}>
+                    ${atm.cash_available.toLocaleString()}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-400">Last Service</div>
+                  <div className="text-sm text-gray-300">
+                    {new Date(atm.last_maintenance).toLocaleDateString()}
+                  </div>
+                </div>
+              </div>
+
+              {/* Features */}
+              <div className="mb-4">
+                <div className="text-sm text-gray-400 mb-2">Features</div>
+                <div className="flex flex-wrap gap-2">
+                  {atm.features.map(feature => (
+                    <span key={feature} className="px-2 py-1 bg-gray-700 text-gray-300 rounded text-xs">
+                      {feature.replace('_', ' ')}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex flex-col sm:flex-row gap-2">
+                <button 
+                  onClick={() => setSelectedATM(atm)}
+                  className="flex-1 bg-teal-600 hover:bg-teal-700 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center"
+                >
+                  <Navigation className="w-4 h-4 mr-2" />
+                  Get Directions
+                </button>
+                <button className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors">
+                  View Details
+                </button>
+                {atm.status === 'online' && (
+                  <button className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors">
+                    Use ATM
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {filteredATMs.length === 0 && (
+          <div className="text-center py-12">
+            <MapPin className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-white mb-2">No ATMs Found</h3>
+            <p className="text-gray-400">Try adjusting your search criteria or check back later.</p>
+          </div>
+        )}
+      </div>
+
+      {/* Selected ATM Modal */}
+      {selectedATM && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-white">Directions</h3>
+              <button 
+                onClick={() => setSelectedATM(null)}
+                className="text-gray-400 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="mb-4">
+              <p className="text-white font-medium">{selectedATM.name}</p>
+              <p className="text-gray-400 text-sm">{selectedATM.address}</p>
+              <p className="text-teal-400 text-sm mt-2">{calculateDistance(selectedATM)} km away</p>
+            </div>
+            <div className="flex gap-3">
+              <button 
+                className="flex-1 bg-teal-600 hover:bg-teal-700 text-white py-2 px-4 rounded-lg text-sm font-medium"
+                onClick={() => {
+                  // Mock opening directions
+                  alert(`Opening directions to ${selectedATM.name}...`);
+                  setSelectedATM(null);
+                }}
+              >
+                Open in Maps
+              </button>
+              <button 
+                onClick={() => setSelectedATM(null)}
+                className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-lg text-sm font-medium"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Admin Login Component
 const AdminLogin = ({ onLogin }) => {
   const [loginData, setLoginData] = useState({
