@@ -52,7 +52,12 @@ import {
   Smartphone,
   Wifi,
   Battery,
-  Signal
+  Signal,
+  Calculator,
+  PieChart,
+  TrendingUpDown,
+  Receipt,
+  FileSpreadsheet
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Area, AreaChart } from 'recharts';
 
