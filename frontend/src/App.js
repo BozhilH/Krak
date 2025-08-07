@@ -19,7 +19,8 @@ const {
   Footer,
   AboutUs,
   AdminPanel,
-  ATMLocator
+  ATMLocator,
+  TaxReports
 } = Components;
 
 function App() {
