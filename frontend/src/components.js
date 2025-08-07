@@ -2112,6 +2112,830 @@ const ManualKYCManagement = ({ user }) => {
   );
 };
 
+// Admin ATM Management Component
+const AdminATMManagement = ({ user }) => {
+  const [atmView, setAtmView] = useState('overview');
+  const [atmData, setAtmData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedATM, setSelectedATM] = useState(null);
+  const [showAddATM, setShowAddATM] = useState(false);
+
+  useEffect(() => {
+    fetchATMData();
+  }, []);
+
+  const fetchATMData = async () => {
+    // Mock ATM data for admin management
+    const mockATMs = [
+      {
+        id: 'atm_001',
+        name: 'CryptoOX ATM - Downtown Mall',
+        address: '123 Main Street, New York, NY 10001',
+        coordinates: { lat: 40.7128, lng: -74.0060 },
+        status: 'online',
+        supported_coins: ['BTC', 'ETH', 'XRP'],
+        fees: { buy: 5.5, sell: 4.5 },
+        cash_available: 75000,
+        cash_capacity: 100000,
+        last_maintenance: '2025-01-10T10:00:00Z',
+        daily_volume: 125000,
+        monthly_volume: 3500000,
+        transactions_today: 47,
+        uptime: 99.2,
+        model: 'CryptoMatic 3000',
+        installation_date: '2024-06-15',
+        maintenance_schedule: 'Weekly',
+        alerts: []
+      },
+      {
+        id: 'atm_002', 
+        name: 'CryptoOX ATM - Financial District',
+        address: '456 Wall Street, New York, NY 10005',
+        coordinates: { lat: 40.7074, lng: -74.0113 },
+        status: 'online',
+        supported_coins: ['BTC', 'ETH', 'XRP'],
+        fees: { buy: 5.0, sell: 4.0 },
+        cash_available: 92000,
+        cash_capacity: 120000,
+        last_maintenance: '2025-01-09T14:30:00Z',
+        daily_volume: 189000,
+        monthly_volume: 5200000,
+        transactions_today: 73,
+        uptime: 99.8,
+        model: 'CryptoMatic Pro',
+        installation_date: '2024-08-20',
+        maintenance_schedule: 'Bi-weekly',
+        alerts: []
+      },
+      {
+        id: 'atm_003',
+        name: 'CryptoOX ATM - Times Square',
+        address: '789 Broadway, New York, NY 10019',
+        coordinates: { lat: 40.7580, lng: -73.9855 },
+        status: 'maintenance',
+        supported_coins: ['BTC', 'ETH', 'XRP'],
+        fees: { buy: 6.0, sell: 5.0 },
+        cash_available: 0,
+        cash_capacity: 80000,
+        last_maintenance: '2025-01-10T08:00:00Z',
+        daily_volume: 0,
+        monthly_volume: 2800000,
+        transactions_today: 0,
+        uptime: 87.5,
+        model: 'CryptoMatic 2000',
+        installation_date: '2024-04-10',
+        maintenance_schedule: 'Weekly',
+        alerts: [
+          { type: 'maintenance', message: 'Scheduled maintenance in progress', timestamp: '2025-01-10T08:00:00Z' }
+        ]
+      }
+    ];
+    setAtmData(mockATMs);
+    setLoading(false);
+  };
+
+  const handleATMStatusChange = async (atmId, newStatus) => {
+    setAtmData(prev => prev.map(atm => 
+      atm.id === atmId ? { ...atm, status: newStatus } : atm
+    ));
+    alert(`ATM status changed to ${newStatus}`);
+  };
+
+  const handleCashRefill = async (atmId, amount) => {
+    setAtmData(prev => prev.map(atm => 
+      atm.id === atmId ? { ...atm, cash_available: Math.min(atm.cash_capacity, atm.cash_available + amount) } : atm
+    ));
+    alert(`Cash refilled: $${amount.toLocaleString()}`);
+  };
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-center h-64">
+          <RefreshCw className="w-8 h-8 animate-spin text-gray-400" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-900">
+      {/* ATM Management Navigation */}
+      <div className="border-b border-gray-700 bg-gray-800">
+        <div className="px-6">
+          <div className="flex items-center justify-between py-4">
+            <h1 className="text-2xl font-bold text-white">ATM Management</h1>
+            <button
+              onClick={() => setShowAddATM(true)}
+              className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add ATM
+            </button>
+          </div>
+          <nav className="flex space-x-8">
+            <button
+              onClick={() => setAtmView('overview')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                atmView === 'overview'
+                  ? 'border-teal-500 text-teal-400'
+                  : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-300'
+              }`}
+            >
+              Overview
+            </button>
+            <button
+              onClick={() => setAtmView('locations')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                atmView === 'locations'
+                  ? 'border-teal-500 text-teal-400'
+                  : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-300'
+              }`}
+            >
+              ATM Locations
+            </button>
+            <button
+              onClick={() => setAtmView('analytics')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                atmView === 'analytics'
+                  ? 'border-teal-500 text-teal-400'
+                  : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-300'
+              }`}
+            >
+              Analytics
+            </button>
+            <button
+              onClick={() => setAtmView('maintenance')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                atmView === 'maintenance'
+                  ? 'border-teal-500 text-teal-400'
+                  : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-300'
+              }`}
+            >
+              Maintenance
+            </button>
+          </nav>
+        </div>
+      </div>
+
+      <div className="p-6">
+        {atmView === 'overview' && (
+          <div>
+            {/* ATM Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <div className="bg-gray-800 rounded-lg p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-400 text-sm">Total ATMs</p>
+                    <p className="text-2xl font-bold text-white">{atmData.length}</p>
+                    <p className="text-green-400 text-sm">+2 this month</p>
+                  </div>
+                  <MapPin className="w-8 h-8 text-teal-400" />
+                </div>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-400 text-sm">Online ATMs</p>
+                    <p className="text-2xl font-bold text-white">{atmData.filter(a => a.status === 'online').length}</p>
+                    <p className="text-green-400 text-sm">{((atmData.filter(a => a.status === 'online').length / atmData.length) * 100).toFixed(1)}% uptime</p>
+                  </div>
+                  <CheckCircle className="w-8 h-8 text-green-400" />
+                </div>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-400 text-sm">Daily Volume</p>
+                    <p className="text-2xl font-bold text-white">${atmData.reduce((sum, atm) => sum + atm.daily_volume, 0).toLocaleString()}</p>
+                    <p className="text-blue-400 text-sm">{atmData.reduce((sum, atm) => sum + atm.transactions_today, 0)} transactions</p>
+                  </div>
+                  <Activity className="w-8 h-8 text-blue-400" />
+                </div>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-400 text-sm">Total Cash</p>
+                    <p className="text-2xl font-bold text-white">${atmData.reduce((sum, atm) => sum + atm.cash_available, 0).toLocaleString()}</p>
+                    <p className="text-yellow-400 text-sm">{atmData.filter(a => a.cash_available < a.cash_capacity * 0.3).length} need refill</p>
+                  </div>
+                  <DollarSign className="w-8 h-8 text-yellow-400" />
+                </div>
+              </div>
+            </div>
+
+            {/* ATM List */}
+            <div className="bg-gray-800 rounded-lg overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-700">
+                <h3 className="text-lg font-semibold text-white">ATM Status Overview</h3>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-700">
+                    <tr>
+                      <th className="text-left p-4 font-medium text-gray-300">ATM</th>
+                      <th className="text-left p-4 font-medium text-gray-300">Status</th>
+                      <th className="text-left p-4 font-medium text-gray-300">Cash Level</th>
+                      <th className="text-left p-4 font-medium text-gray-300">Daily Volume</th>
+                      <th className="text-left p-4 font-medium text-gray-300">Transactions</th>
+                      <th className="text-left p-4 font-medium text-gray-300">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-700">
+                    {atmData.map((atm) => (
+                      <tr key={atm.id} className="hover:bg-gray-700">
+                        <td className="p-4">
+                          <div>
+                            <div className="font-medium text-white">{atm.name}</div>
+                            <div className="text-sm text-gray-400">{atm.address}</div>
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            atm.status === 'online' ? 'bg-green-600 text-white' :
+                            atm.status === 'maintenance' ? 'bg-red-600 text-white' :
+                            'bg-yellow-600 text-white'
+                          }`}>
+                            {atm.status.toUpperCase()}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex items-center">
+                            <div className="flex-1 bg-gray-700 rounded-full h-2 mr-3">
+                              <div
+                                className={`h-2 rounded-full ${
+                                  (atm.cash_available / atm.cash_capacity) > 0.5 ? 'bg-green-500' :
+                                  (atm.cash_available / atm.cash_capacity) > 0.3 ? 'bg-yellow-500' :
+                                  'bg-red-500'
+                                }`}
+                                style={{ width: `${(atm.cash_available / atm.cash_capacity) * 100}%` }}
+                              ></div>
+                            </div>
+                            <span className="text-sm text-gray-300">
+                              ${atm.cash_available.toLocaleString()}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="p-4 text-white">${atm.daily_volume.toLocaleString()}</td>
+                        <td className="p-4 text-white">{atm.transactions_today}</td>
+                        <td className="p-4">
+                          <div className="flex space-x-2">
+                            {atm.status === 'online' && (
+                              <button
+                                onClick={() => handleATMStatusChange(atm.id, 'maintenance')}
+                                className="px-3 py-1 bg-yellow-600 hover:bg-yellow-700 text-white rounded text-sm"
+                              >
+                                Maintenance
+                              </button>
+                            )}
+                            {atm.status === 'maintenance' && (
+                              <button
+                                onClick={() => handleATMStatusChange(atm.id, 'online')}
+                                className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-sm"
+                              >
+                                Resume
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleCashRefill(atm.id, 25000)}
+                              className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm"
+                            >
+                              Refill
+                            </button>
+                            <button
+                              onClick={() => setSelectedATM(atm)}
+                              className="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm"
+                            >
+                              Details
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {atmView === 'locations' && (
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">ATM Location Management</h3>
+            <div className="bg-gray-900 rounded-lg h-96 flex items-center justify-center border-2 border-dashed border-gray-600">
+              <div className="text-center">
+                <MapPin className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-400 text-lg">Interactive Map View</p>
+                <p className="text-gray-500">Manage ATM locations and coverage areas</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {atmView === 'analytics' && (
+          <div className="space-y-6">
+            <div className="bg-gray-800 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-white mb-4">Performance Analytics</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="text-white font-medium mb-2">Monthly Volume Trend</h4>
+                  <div className="bg-gray-900 rounded p-4 h-48 flex items-center justify-center">
+                    <p className="text-gray-400">Chart placeholder - Volume over time</p>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-white font-medium mb-2">Transaction Distribution</h4>
+                  <div className="bg-gray-900 rounded p-4 h-48 flex items-center justify-center">
+                    <p className="text-gray-400">Chart placeholder - Transaction types</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {atmView === 'maintenance' && (
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Maintenance Schedule</h3>
+            <div className="space-y-4">
+              {atmData.map((atm) => (
+                <div key={atm.id} className="border border-gray-700 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-white font-medium">{atm.name}</h4>
+                      <p className="text-gray-400 text-sm">Last maintenance: {new Date(atm.last_maintenance).toLocaleDateString()}</p>
+                      <p className="text-gray-400 text-sm">Schedule: {atm.maintenance_schedule}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-gray-400">Uptime: {atm.uptime}%</p>
+                      <button className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm mt-2">
+                        Schedule Maintenance
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Admin Liquidity Management Component  
+const AdminLiquidityManagement = ({ user }) => {
+  const [liquidityView, setLiquidityView] = useState('overview');
+  const [walletData, setWalletData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [transferModal, setTransferModal] = useState(false);
+
+  useEffect(() => {
+    fetchLiquidityData();
+  }, []);
+
+  const fetchLiquidityData = async () => {
+    // Mock liquidity data for BTC, ETH, XRP
+    const mockWallets = [
+      {
+        coin: 'BTC',
+        hot_wallet: {
+          address: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
+          balance: 15.67834521,
+          usd_value: 1792456.32,
+          threshold_min: 10.0,
+          threshold_max: 50.0,
+          last_updated: '2025-01-10T12:30:00Z'
+        },
+        cold_storage: {
+          address: '3FZbgi29cpjq2GjdwV8eyHuJJnkLtktZc5',
+          balance: 245.89234567,
+          usd_value: 28103421.87,
+          last_audit: '2025-01-08T09:00:00Z',
+          security_level: 'Multi-sig 3/5'
+        },
+        total_liquidity: 261.56069088,
+        daily_volume: 3.45678901,
+        pending_transfers: 2
+      },
+      {
+        coin: 'ETH',
+        hot_wallet: {
+          address: '0x742d35Cc6b...2609eE4e2',
+          balance: 234.56789123,
+          usd_value: 831564.23,
+          threshold_min: 150.0,
+          threshold_max: 500.0,
+          last_updated: '2025-01-10T12:28:00Z'
+        },
+        cold_storage: {
+          address: '0x8ba1f109551...d6e4e2609eE',
+          balance: 1567.89012345,
+          usd_value: 5559834.67,
+          last_audit: '2025-01-08T09:00:00Z',
+          security_level: 'Multi-sig 3/5'
+        },
+        total_liquidity: 1802.45801468,
+        daily_volume: 45.67890123,
+        pending_transfers: 1
+      },
+      {
+        coin: 'XRP',
+        hot_wallet: {
+          address: 'rDr5okqGmMpn4...k8a9b2c3d4e5',
+          balance: 45678.90123456,
+          usd_value: 137654.12,
+          threshold_min: 30000.0,
+          threshold_max: 80000.0,
+          last_updated: '2025-01-10T12:25:00Z'
+        },
+        cold_storage: {
+          address: 'rN7n7otEqVvqzy...p9q8r7s6t5u4',
+          balance: 789012.34567890,
+          usd_value: 2379543.21,
+          last_audit: '2025-01-08T09:00:00Z',
+          security_level: 'Multi-sig 2/3'
+        },
+        total_liquidity: 834691.24691346,
+        daily_volume: 8901.23456789,
+        pending_transfers: 0
+      }
+    ];
+
+    setWalletData(mockWallets);
+    setLoading(false);
+  };
+
+  const handleTransfer = async (coin, fromType, toType, amount) => {
+    // Mock transfer functionality
+    alert(`Transfer initiated: ${amount} ${coin} from ${fromType} to ${toType}`);
+    setTransferModal(false);
+  };
+
+  const getBalanceStatus = (wallet) => {
+    const percentage = (wallet.hot_wallet.balance / wallet.hot_wallet.threshold_max) * 100;
+    if (percentage > 80) return 'high';
+    if (percentage < 30) return 'low';
+    return 'normal';
+  };
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-center h-64">
+          <RefreshCw className="w-8 h-8 animate-spin text-gray-400" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-900">
+      {/* Liquidity Management Navigation */}
+      <div className="border-b border-gray-700 bg-gray-800">
+        <div className="px-6">
+          <div className="flex items-center justify-between py-4">
+            <h1 className="text-2xl font-bold text-white">Liquidity Management</h1>
+            <button
+              onClick={() => setTransferModal(true)}
+              className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Manual Transfer
+            </button>
+          </div>
+          <nav className="flex space-x-8">
+            <button
+              onClick={() => setLiquidityView('overview')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                liquidityView === 'overview'
+                  ? 'border-teal-500 text-teal-400'
+                  : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-300'
+              }`}
+            >
+              Overview
+            </button>
+            <button
+              onClick={() => setLiquidityView('hot-wallets')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                liquidityView === 'hot-wallets'
+                  ? 'border-teal-500 text-teal-400'
+                  : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-300'
+              }`}
+            >
+              Hot Wallets
+            </button>
+            <button
+              onClick={() => setLiquidityView('cold-storage')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                liquidityView === 'cold-storage'
+                  ? 'border-teal-500 text-teal-400'
+                  : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-300'
+              }`}
+            >
+              Cold Storage
+            </button>
+            <button
+              onClick={() => setLiquidityView('transfers')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                liquidityView === 'transfers'
+                  ? 'border-teal-500 text-teal-400'
+                  : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-300'
+              }`}
+            >
+              Transfers
+            </button>
+          </nav>
+        </div>
+      </div>
+
+      <div className="p-6">
+        {liquidityView === 'overview' && (
+          <div>
+            {/* Liquidity Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <div className="bg-gray-800 rounded-lg p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-400 text-sm">Total Hot Wallet Value</p>
+                    <p className="text-2xl font-bold text-white">${walletData.reduce((sum, w) => sum + w.hot_wallet.usd_value, 0).toLocaleString()}</p>
+                    <p className="text-teal-400 text-sm">Across {walletData.length} currencies</p>
+                  </div>
+                  <Wallet className="w-8 h-8 text-teal-400" />
+                </div>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-400 text-sm">Cold Storage Value</p>
+                    <p className="text-2xl font-bold text-white">${walletData.reduce((sum, w) => sum + w.cold_storage.usd_value, 0).toLocaleString()}</p>
+                    <p className="text-blue-400 text-sm">Secure holdings</p>
+                  </div>
+                  <Lock className="w-8 h-8 text-blue-400" />
+                </div>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-400 text-sm">Pending Transfers</p>
+                    <p className="text-2xl font-bold text-white">{walletData.reduce((sum, w) => sum + w.pending_transfers, 0)}</p>
+                    <p className="text-yellow-400 text-sm">Awaiting approval</p>
+                  </div>
+                  <Upload className="w-8 h-8 text-yellow-400" />
+                </div>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-400 text-sm">Daily Volume</p>
+                    <p className="text-2xl font-bold text-white">${(walletData.reduce((sum, w) => sum + w.daily_volume * (w.hot_wallet.usd_value / w.hot_wallet.balance), 0)).toLocaleString()}</p>
+                    <p className="text-green-400 text-sm">All currencies</p>
+                  </div>
+                  <Activity className="w-8 h-8 text-green-400" />
+                </div>
+              </div>
+            </div>
+
+            {/* Wallet Status Cards */}
+            <div className="space-y-6">
+              {walletData.map((wallet) => (
+                <div key={wallet.coin} className="bg-gray-800 rounded-lg p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-bold text-white">{wallet.coin} Liquidity</h3>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-white">{wallet.total_liquidity.toFixed(8)}</p>
+                      <p className="text-gray-400 text-sm">Total Holdings</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Hot Wallet */}
+                    <div className="border border-gray-700 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="text-lg font-semibold text-white flex items-center">
+                          <Wifi className="w-5 h-5 mr-2 text-orange-400" />
+                          Hot Wallet
+                        </h4>
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          getBalanceStatus(wallet) === 'high' ? 'bg-red-600 text-white' :
+                          getBalanceStatus(wallet) === 'low' ? 'bg-yellow-600 text-white' :
+                          'bg-green-600 text-white'
+                        }`}>
+                          {getBalanceStatus(wallet).toUpperCase()}
+                        </span>
+                      </div>
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-gray-400 text-sm">Balance</p>
+                          <p className="text-white font-mono">{wallet.hot_wallet.balance.toFixed(8)} {wallet.coin}</p>
+                          <p className="text-gray-300 text-sm">${wallet.hot_wallet.usd_value.toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 text-sm">Threshold Range</p>
+                          <p className="text-white text-sm">{wallet.hot_wallet.threshold_min} - {wallet.hot_wallet.threshold_max} {wallet.coin}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 text-sm">Address</p>
+                          <p className="text-white text-xs font-mono">{wallet.hot_wallet.address}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Cold Storage */}
+                    <div className="border border-gray-700 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="text-lg font-semibold text-white flex items-center">
+                          <Lock className="w-5 h-5 mr-2 text-blue-400" />
+                          Cold Storage
+                        </h4>
+                        <span className="px-2 py-1 bg-blue-600 text-white rounded text-xs font-medium">
+                          SECURE
+                        </span>
+                      </div>
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-gray-400 text-sm">Balance</p>
+                          <p className="text-white font-mono">{wallet.cold_storage.balance.toFixed(8)} {wallet.coin}</p>
+                          <p className="text-gray-300 text-sm">${wallet.cold_storage.usd_value.toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 text-sm">Security</p>
+                          <p className="text-white text-sm">{wallet.cold_storage.security_level}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 text-sm">Last Audit</p>
+                          <p className="text-white text-sm">{new Date(wallet.cold_storage.last_audit).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quick Actions */}
+                  <div className="flex flex-wrap gap-3 mt-6">
+                    <button
+                      onClick={() => handleTransfer(wallet.coin, 'cold', 'hot', 10)}
+                      className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm flex items-center"
+                    >
+                      <ArrowDownRight className="w-4 h-4 mr-2" />
+                      Cold → Hot
+                    </button>
+                    <button
+                      onClick={() => handleTransfer(wallet.coin, 'hot', 'cold', 5)}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm flex items-center"
+                    >
+                      <ArrowUpRight className="w-4 h-4 mr-2" />
+                      Hot → Cold
+                    </button>
+                    <button className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-sm">
+                      View History
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {liquidityView === 'hot-wallets' && (
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-white mb-6">Hot Wallet Management</h3>
+            <div className="space-y-4">
+              {walletData.map((wallet) => (
+                <div key={wallet.coin} className="border border-gray-700 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="w-10 h-10 bg-orange-600 rounded-full flex items-center justify-center mr-4">
+                        <Wifi className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="text-white font-semibold">{wallet.coin} Hot Wallet</h4>
+                        <p className="text-gray-400 text-sm font-mono">{wallet.hot_wallet.address}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-white">{wallet.hot_wallet.balance.toFixed(8)} {wallet.coin}</p>
+                      <p className="text-gray-300 text-sm">${wallet.hot_wallet.usd_value.toLocaleString()}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {liquidityView === 'cold-storage' && (
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-white mb-6">Cold Storage Management</h3>
+            <div className="space-y-4">
+              {walletData.map((wallet) => (
+                <div key={wallet.coin} className="border border-gray-700 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center mr-4">
+                        <Lock className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="text-white font-semibold">{wallet.coin} Cold Storage</h4>
+                        <p className="text-gray-400 text-sm">{wallet.cold_storage.security_level}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-white">{wallet.cold_storage.balance.toFixed(8)} {wallet.coin}</p>
+                      <p className="text-gray-300 text-sm">${wallet.cold_storage.usd_value.toLocaleString()}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {liquidityView === 'transfers' && (
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-white mb-6">Transfer History & Pending</h3>
+            <div className="text-center py-12">
+              <Upload className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h4 className="text-lg font-medium text-white mb-2">No Recent Transfers</h4>
+              <p className="text-gray-400">Transfer history will appear here</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Transfer Modal */}
+      {transferModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-white">Manual Transfer</h3>
+              <button 
+                onClick={() => setTransferModal(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Currency</label>
+                <select className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white">
+                  <option value="BTC">Bitcoin (BTC)</option>
+                  <option value="ETH">Ethereum (ETH)</option>
+                  <option value="XRP">XRP (XRP)</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">From</label>
+                <select className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white">
+                  <option value="hot">Hot Wallet</option>
+                  <option value="cold">Cold Storage</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">To</label>
+                <select className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white">
+                  <option value="cold">Cold Storage</option>
+                  <option value="hot">Hot Wallet</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Amount</label>
+                <input 
+                  type="number" 
+                  step="0.00000001"
+                  placeholder="0.00000000"
+                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                />
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button 
+                className="flex-1 bg-teal-600 hover:bg-teal-700 text-white py-2 px-4 rounded-lg text-sm font-medium"
+                onClick={() => handleTransfer('BTC', 'hot', 'cold', 1.0)}
+              >
+                Initiate Transfer
+              </button>
+              <button 
+                onClick={() => setTransferModal(false)}
+                className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-lg text-sm font-medium"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // KYC Main View Component (Router for KYC sections)
 const AdminKYCManagement = ({ user }) => {
   const [kycView, setKycView] = useState('dashboard');
