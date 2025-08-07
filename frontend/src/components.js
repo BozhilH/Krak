@@ -3047,6 +3047,8 @@ const AdminPanel = () => {
           {currentView === 'admin-clients' && <AdminClients user={user} />}
           {currentView === 'admin-tickets' && <AdminTickets user={user} />}
           {currentView === 'admin-kyc' && <AdminKYCManagement user={user} />}
+          {currentView === 'admin-atm' && <AdminATMManagement user={user} />}
+          {currentView === 'admin-liquidity' && <AdminLiquidityManagement user={user} />}
           {/* Add more admin views here */}
         </main>
       </div>
