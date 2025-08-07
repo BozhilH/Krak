@@ -214,7 +214,7 @@ async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(secur
         raise HTTPException(status_code=401, detail="Invalid token")
 
 async def verify_admin(token_data: dict = Depends(verify_token)):
-    if token_data["role"] not in ["admin", "support", "kyc"]:
+    if token_data["role"] not in ["admin", "support", "kyc", "accounting"]:
         raise HTTPException(status_code=403, detail="Access denied")
     return token_data
 
