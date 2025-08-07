@@ -2492,6 +2492,855 @@ const AdminATMManagement = ({ user }) => {
   );
 };
 
+// Admin Accounting Dashboard Component
+const AccountingDashboard = ({ user }) => {
+  const [accountingView, setAccountingView] = useState('overview');
+  const [financialData, setFinancialData] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [dateRange, setDateRange] = useState('current_month');
+
+  useEffect(() => {
+    fetchFinancialData();
+  }, [dateRange]);
+
+  const fetchFinancialData = async () => {
+    // Mock comprehensive financial data for accounting
+    const mockFinancialData = {
+      // Revenue Streams
+      trading_fees: {
+        total: 2456789.34,
+        breakdown: {
+          spot_trading: 1678432.12,
+          margin_trading: 445621.89,
+          futures_trading: 332735.33
+        }
+      },
+      withdrawal_fees: {
+        total: 123456.78,
+        breakdown: {
+          crypto: 98765.43,
+          fiat: 24691.35
+        }
+      },
+      deposit_fees: {
+        total: 45678.90,
+        breakdown: {
+          wire_transfer: 34567.12,
+          card_deposit: 11111.78
+        }
+      },
+      atm_fees: {
+        total: 87654.32,
+        breakdown: {
+          transaction_fees: 65432.10,
+          conversion_fees: 22222.22
+        }
+      },
+      listing_fees: {
+        total: 500000.00,
+        breakdown: {
+          new_tokens: 400000.00,
+          premium_listings: 100000.00
+        }
+      },
+      
+      // Operating Expenses
+      operational_costs: {
+        total: 1234567.89,
+        breakdown: {
+          staff_salaries: 678901.23,
+          server_infrastructure: 234567.89,
+          compliance_legal: 123456.78,
+          marketing: 98765.43,
+          office_rent: 54321.09,
+          utilities: 23456.78,
+          insurance: 15098.69
+        }
+      },
+      
+      // Liquidity Costs
+      liquidity_costs: {
+        total: 345678.90,
+        breakdown: {
+          market_making: 234567.12,
+          spread_costs: 111111.78
+        }
+      },
+      
+      // Security & Compliance
+      security_costs: {
+        total: 123456.78,
+        breakdown: {
+          cold_storage: 67890.12,
+          insurance: 34567.89,
+          audits: 20998.77
+        }
+      },
+      
+      // Profit Calculations
+      gross_revenue: 3213579.34,
+      total_expenses: 1703703.57,
+      net_profit: 1509875.77,
+      profit_margin: 47.0,
+      
+      // Tax Information
+      tax_liability: {
+        corporate_tax: 377468.94,
+        vat_gst: 96407.38,
+        payroll_tax: 67890.12,
+        total: 541766.44
+      },
+      
+      // User Activity Financial Impact
+      user_metrics: {
+        total_users: 45678,
+        active_traders: 12345,
+        premium_users: 3456,
+        average_revenue_per_user: 70.34,
+        user_acquisition_cost: 45.67,
+        customer_lifetime_value: 2340.56
+      },
+      
+      // Monthly Trends
+      monthly_trends: [
+        { month: 'Jan', revenue: 245678, profit: 123456, expenses: 122222 },
+        { month: 'Feb', revenue: 267890, profit: 134567, expenses: 133323 },
+        { month: 'Mar', revenue: 289012, profit: 145678, expenses: 143334 },
+        { month: 'Apr', revenue: 298765, profit: 154321, expenses: 144444 },
+        { month: 'May', revenue: 312456, profit: 165432, expenses: 147024 },
+        { month: 'Jun', revenue: 334567, profit: 176543, expenses: 158024 }
+      ],
+      
+      // Asset Performance
+      crypto_holdings: {
+        btc: { amount: 245.67, usd_value: 28103421.87, profit_loss: 2456789.12 },
+        eth: { amount: 1567.89, usd_value: 5559834.67, profit_loss: 876543.21 },
+        xrp: { amount: 789012.34, usd_value: 2379543.21, profit_loss: 345678.90 }
+      }
+    };
+
+    setFinancialData(mockFinancialData);
+    setLoading(false);
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2
+    }).format(amount);
+  };
+
+  const formatPercentage = (value) => {
+    return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
+  };
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-center h-64">
+          <RefreshCw className="w-8 h-8 animate-spin text-gray-400" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-900">
+      {/* Accounting Header */}
+      <div className="border-b border-gray-700 bg-gray-800">
+        <div className="px-6">
+          <div className="flex items-center justify-between py-4">
+            <h1 className="text-2xl font-bold text-white">Financial Dashboard</h1>
+            <div className="flex items-center gap-4">
+              <select
+                value={dateRange}
+                onChange={(e) => setDateRange(e.target.value)}
+                className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm"
+              >
+                <option value="current_month">Current Month</option>
+                <option value="last_month">Last Month</option>
+                <option value="current_quarter">Current Quarter</option>
+                <option value="current_year">Current Year</option>
+              </select>
+              <button className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center">
+                <Download className="w-4 h-4 mr-2" />
+                Export Report
+              </button>
+            </div>
+          </div>
+          <nav className="flex space-x-8">
+            <button
+              onClick={() => setAccountingView('overview')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                accountingView === 'overview'
+                  ? 'border-teal-500 text-teal-400'
+                  : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-300'
+              }`}
+            >
+              Financial Overview
+            </button>
+            <button
+              onClick={() => setAccountingView('revenue')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                accountingView === 'revenue'
+                  ? 'border-teal-500 text-teal-400'
+                  : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-300'
+              }`}
+            >
+              Revenue Analysis
+            </button>
+            <button
+              onClick={() => setAccountingView('expenses')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                accountingView === 'expenses'
+                  ? 'border-teal-500 text-teal-400'
+                  : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-300'
+              }`}
+            >
+              Expense Breakdown
+            </button>
+            <button
+              onClick={() => setAccountingView('tax')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                accountingView === 'tax'
+                  ? 'border-teal-500 text-teal-400'
+                  : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-300'
+              }`}
+            >
+              Tax Analysis
+            </button>
+            <button
+              onClick={() => setAccountingView('assets')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                accountingView === 'assets'
+                  ? 'border-teal-500 text-teal-400'
+                  : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-300'
+              }`}
+            >
+              Asset Performance
+            </button>
+          </nav>
+        </div>
+      </div>
+
+      <div className="p-6">
+        {accountingView === 'overview' && (
+          <div>
+            {/* Key Financial Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <div className="bg-gray-800 rounded-lg p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-400 text-sm">Gross Revenue</p>
+                    <p className="text-2xl font-bold text-white">{formatCurrency(financialData.gross_revenue)}</p>
+                    <p className="text-green-400 text-sm">+12.5% from last month</p>
+                  </div>
+                  <DollarSign className="w-8 h-8 text-green-400" />
+                </div>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-400 text-sm">Net Profit</p>
+                    <p className="text-2xl font-bold text-white">{formatCurrency(financialData.net_profit)}</p>
+                    <p className="text-green-400 text-sm">{formatPercentage(financialData.profit_margin)} margin</p>
+                  </div>
+                  <TrendingUp className="w-8 h-8 text-green-400" />
+                </div>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-400 text-sm">Total Expenses</p>
+                    <p className="text-2xl font-bold text-white">{formatCurrency(financialData.total_expenses)}</p>
+                    <p className="text-blue-400 text-sm">53.0% of revenue</p>
+                  </div>
+                  <Calculator className="w-8 h-8 text-blue-400" />
+                </div>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-400 text-sm">Tax Liability</p>
+                    <p className="text-2xl font-bold text-white">{formatCurrency(financialData.tax_liability.total)}</p>
+                    <p className="text-red-400 text-sm">Due next quarter</p>
+                  </div>
+                  <Receipt className="w-8 h-8 text-red-400" />
+                </div>
+              </div>
+            </div>
+
+            {/* Revenue Breakdown */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              <div className="bg-gray-800 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">Revenue Sources</h3>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Trading Fees</span>
+                    <span className="text-white font-medium">{formatCurrency(financialData.trading_fees.total)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Listing Fees</span>
+                    <span className="text-white font-medium">{formatCurrency(financialData.listing_fees.total)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Withdrawal Fees</span>
+                    <span className="text-white font-medium">{formatCurrency(financialData.withdrawal_fees.total)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">ATM Fees</span>
+                    <span className="text-white font-medium">{formatCurrency(financialData.atm_fees.total)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">User Metrics</h3>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Total Users</span>
+                    <span className="text-white font-medium">{financialData.user_metrics.total_users.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Active Traders</span>
+                    <span className="text-white font-medium">{financialData.user_metrics.active_traders.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Avg. Revenue/User</span>
+                    <span className="text-white font-medium">{formatCurrency(financialData.user_metrics.average_revenue_per_user)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Customer LTV</span>
+                    <span className="text-white font-medium">{formatCurrency(financialData.user_metrics.customer_lifetime_value)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Monthly Trends Chart */}
+            <div className="bg-gray-800 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-white mb-4">Monthly Financial Trends</h3>
+              <div className="bg-gray-900 rounded p-4 h-64 flex items-center justify-center">
+                <p className="text-gray-400">Revenue & Profit Trend Chart</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {accountingView === 'revenue' && (
+          <div className="space-y-6">
+            <div className="bg-gray-800 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-white mb-4">Trading Fees Breakdown</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center py-2 border-b border-gray-700">
+                  <span className="text-gray-300">Spot Trading Fees</span>
+                  <span className="text-white font-medium">{formatCurrency(financialData.trading_fees.breakdown.spot_trading)}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-gray-700">
+                  <span className="text-gray-300">Margin Trading Fees</span>
+                  <span className="text-white font-medium">{formatCurrency(financialData.trading_fees.breakdown.margin_trading)}</span>
+                </div>
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-gray-300">Futures Trading Fees</span>
+                  <span className="text-white font-medium">{formatCurrency(financialData.trading_fees.breakdown.futures_trading)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-gray-800 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">Fee Revenue</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-300">Withdrawal Fees</span>
+                    <span className="text-white">{formatCurrency(financialData.withdrawal_fees.total)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-300">Deposit Fees</span>
+                    <span className="text-white">{formatCurrency(financialData.deposit_fees.total)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-300">ATM Transaction Fees</span>
+                    <span className="text-white">{formatCurrency(financialData.atm_fees.total)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">Premium Services</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-300">Listing Fees</span>
+                    <span className="text-white">{formatCurrency(financialData.listing_fees.total)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-300">Premium Users</span>
+                    <span className="text-white">{financialData.user_metrics.premium_users.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {accountingView === 'expenses' && (
+          <div className="space-y-6">
+            <div className="bg-gray-800 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-white mb-4">Operational Expenses</h3>
+              <div className="space-y-3">
+                {Object.entries(financialData.operational_costs.breakdown).map(([key, value]) => (
+                  <div key={key} className="flex justify-between items-center py-2 border-b border-gray-700">
+                    <span className="text-gray-300 capitalize">{key.replace(/_/g, ' ')}</span>
+                    <span className="text-white font-medium">{formatCurrency(value)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-gray-800 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">Liquidity & Market Making</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-300">Market Making Costs</span>
+                    <span className="text-white">{formatCurrency(financialData.liquidity_costs.breakdown.market_making)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-300">Spread Costs</span>
+                    <span className="text-white">{formatCurrency(financialData.liquidity_costs.breakdown.spread_costs)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">Security & Compliance</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-300">Cold Storage</span>
+                    <span className="text-white">{formatCurrency(financialData.security_costs.breakdown.cold_storage)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-300">Insurance</span>
+                    <span className="text-white">{formatCurrency(financialData.security_costs.breakdown.insurance)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-300">Security Audits</span>
+                    <span className="text-white">{formatCurrency(financialData.security_costs.breakdown.audits)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {accountingView === 'tax' && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="bg-gray-800 rounded-lg p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-white">Corporate Tax</h3>
+                  <Receipt className="w-6 h-6 text-red-400" />
+                </div>
+                <p className="text-2xl font-bold text-white">{formatCurrency(financialData.tax_liability.corporate_tax)}</p>
+                <p className="text-gray-400 text-sm">25% of taxable income</p>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-white">VAT/GST</h3>
+                  <FileText className="w-6 h-6 text-yellow-400" />
+                </div>
+                <p className="text-2xl font-bold text-white">{formatCurrency(financialData.tax_liability.vat_gst)}</p>
+                <p className="text-gray-400 text-sm">On applicable services</p>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-white">Payroll Tax</h3>
+                  <Users className="w-6 h-6 text-blue-400" />
+                </div>
+                <p className="text-2xl font-bold text-white">{formatCurrency(financialData.tax_liability.payroll_tax)}</p>
+                <p className="text-gray-400 text-sm">Employee taxes</p>
+              </div>
+            </div>
+
+            <div className="bg-gray-800 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-white mb-4">Tax Calculation Summary</h3>
+              <div className="space-y-4">
+                <div className="flex justify-between py-2 border-b border-gray-700">
+                  <span className="text-gray-300">Gross Revenue</span>
+                  <span className="text-white">{formatCurrency(financialData.gross_revenue)}</span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-gray-700">
+                  <span className="text-gray-300">Deductible Expenses</span>
+                  <span className="text-white">({formatCurrency(financialData.total_expenses)})</span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-gray-700">
+                  <span className="text-gray-300">Taxable Income</span>
+                  <span className="text-white">{formatCurrency(financialData.net_profit)}</span>
+                </div>
+                <div className="flex justify-between py-2 font-semibold text-lg">
+                  <span className="text-white">Total Tax Liability</span>
+                  <span className="text-red-400">{formatCurrency(financialData.tax_liability.total)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {accountingView === 'assets' && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {Object.entries(financialData.crypto_holdings).map(([crypto, data]) => (
+                <div key={crypto} className="bg-gray-800 rounded-lg p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-white">{crypto.toUpperCase()} Holdings</h3>
+                    <div className="w-10 h-10 bg-orange-600 rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold">{crypto.charAt(0).toUpperCase()}</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-300">Amount</span>
+                      <span className="text-white font-mono">{data.amount.toFixed(8)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-300">USD Value</span>
+                      <span className="text-white">{formatCurrency(data.usd_value)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-300">P&L</span>
+                      <span className={`font-medium ${data.profit_loss > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {formatCurrency(data.profit_loss)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="bg-gray-800 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-white mb-4">Asset Performance Summary</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="text-center">
+                  <p className="text-gray-400 text-sm">Total Asset Value</p>
+                  <p className="text-2xl font-bold text-white">
+                    {formatCurrency(Object.values(financialData.crypto_holdings).reduce((sum, asset) => sum + asset.usd_value, 0))}
+                  </p>
+                </div>
+                <div className="text-center">
+                  <p className="text-gray-400 text-sm">Total P&L</p>
+                  <p className="text-2xl font-bold text-green-400">
+                    {formatCurrency(Object.values(financialData.crypto_holdings).reduce((sum, asset) => sum + asset.profit_loss, 0))}
+                  </p>
+                </div>
+                <div className="text-center">
+                  <p className="text-gray-400 text-sm">Asset Performance</p>
+                  <p className="text-2xl font-bold text-green-400">+24.5%</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// User Tax Reports Component
+const TaxReports = ({ setCurrentView }) => {
+  const [reportYear, setReportYear] = useState('2024');
+  const [reportData, setReportData] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [generateLoading, setGenerateLoading] = useState(false);
+
+  useEffect(() => {
+    fetchTaxData();
+  }, [reportYear]);
+
+  const fetchTaxData = async () => {
+    // Mock user tax data
+    const mockTaxData = {
+      user_id: 'user_12345',
+      tax_year: reportYear,
+      trading_activity: {
+        total_trades: 248,
+        total_volume: 1234567.89,
+        realized_gains: 45678.90,
+        realized_losses: -12345.67,
+        net_capital_gains: 33333.23
+      },
+      income_summary: {
+        staking_rewards: 2345.67,
+        referral_bonuses: 678.90,
+        airdrops: 123.45,
+        total_income: 3147.02
+      },
+      deductions: {
+        trading_fees: 5678.90,
+        transaction_fees: 1234.56,
+        platform_fees: 890.12,
+        total_deductions: 7803.58
+      },
+      deposits_withdrawals: {
+        fiat_deposits: 50000.00,
+        fiat_withdrawals: 35000.00,
+        crypto_deposits: 25000.00,
+        crypto_withdrawals: 40000.00
+      },
+      tax_calculation: {
+        taxable_income: 28676.67,
+        estimated_tax_owed: 8603.00,
+        effective_tax_rate: 30.0
+      }
+    };
+
+    setReportData(mockTaxData);
+    setLoading(false);
+  };
+
+  const generatePDF = async () => {
+    setGenerateLoading(true);
+    
+    // Mock PDF generation delay
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Create mock PDF download
+    const pdfContent = `
+CryptoOX Tax Report ${reportYear}
+=======================================
+
+Trading Summary:
+- Total Trades: ${reportData.trading_activity.total_trades}
+- Trading Volume: $${reportData.trading_activity.total_volume.toLocaleString()}
+- Net Capital Gains: $${reportData.trading_activity.net_capital_gains.toLocaleString()}
+
+Income Summary:
+- Staking Rewards: $${reportData.income_summary.staking_rewards.toLocaleString()}
+- Total Income: $${reportData.income_summary.total_income.toLocaleString()}
+
+Tax Calculation:
+- Taxable Income: $${reportData.tax_calculation.taxable_income.toLocaleString()}
+- Estimated Tax Owed: $${reportData.tax_calculation.estimated_tax_owed.toLocaleString()}
+- Effective Tax Rate: ${reportData.tax_calculation.effective_tax_rate}%
+
+Generated on: ${new Date().toLocaleDateString()}
+    `;
+
+    const blob = new Blob([pdfContent], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `CryptoOX_Tax_Report_${reportYear}.txt`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    
+    setGenerateLoading(false);
+    alert('Tax report downloaded successfully!');
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white p-6">
+        <div className="flex items-center justify-center h-64">
+          <RefreshCw className="w-8 h-8 animate-spin text-gray-400" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-900 text-white">
+      {/* Header */}
+      <div className="bg-gray-800 border-b border-gray-700 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-white">Tax Reports</h1>
+            <p className="text-gray-400">Generate comprehensive tax reports for submission to authorities</p>
+          </div>
+          <button 
+            onClick={() => setCurrentView('dashboard')}
+            className="text-gray-400 hover:text-white"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+      </div>
+
+      <div className="p-6">
+        {/* Tax Year Selection */}
+        <div className="bg-gray-800 rounded-lg p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-white">Select Tax Year</h2>
+            <select
+              value={reportYear}
+              onChange={(e) => setReportYear(e.target.value)}
+              className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+            >
+              <option value="2024">2024</option>
+              <option value="2023">2023</option>
+              <option value="2022">2022</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Tax Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-gray-800 rounded-lg p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-sm">Net Capital Gains</p>
+                <p className="text-2xl font-bold text-white">${reportData.trading_activity.net_capital_gains.toLocaleString()}</p>
+                <p className="text-green-400 text-sm">From {reportData.trading_activity.total_trades} trades</p>
+              </div>
+              <TrendingUp className="w-8 h-8 text-green-400" />
+            </div>
+          </div>
+
+          <div className="bg-gray-800 rounded-lg p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-sm">Total Income</p>
+                <p className="text-2xl font-bold text-white">${reportData.income_summary.total_income.toLocaleString()}</p>
+                <p className="text-blue-400 text-sm">Staking & rewards</p>
+              </div>
+              <DollarSign className="w-8 h-8 text-blue-400" />
+            </div>
+          </div>
+
+          <div className="bg-gray-800 rounded-lg p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-sm">Deductible Fees</p>
+                <p className="text-2xl font-bold text-white">${reportData.deductions.total_deductions.toLocaleString()}</p>
+                <p className="text-yellow-400 text-sm">Trading & platform fees</p>
+              </div>
+              <Receipt className="w-8 h-8 text-yellow-400" />
+            </div>
+          </div>
+
+          <div className="bg-gray-800 rounded-lg p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-sm">Estimated Tax</p>
+                <p className="text-2xl font-bold text-white">${reportData.tax_calculation.estimated_tax_owed.toLocaleString()}</p>
+                <p className="text-red-400 text-sm">{reportData.tax_calculation.effective_tax_rate}% rate</p>
+              </div>
+              <Calculator className="w-8 h-8 text-red-400" />
+            </div>
+          </div>
+        </div>
+
+        {/* Detailed Breakdown */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Trading Activity</h3>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-gray-300">Total Trades</span>
+                <span className="text-white">{reportData.trading_activity.total_trades}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-300">Trading Volume</span>
+                <span className="text-white">${reportData.trading_activity.total_volume.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-300">Realized Gains</span>
+                <span className="text-green-400">${reportData.trading_activity.realized_gains.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-300">Realized Losses</span>
+                <span className="text-red-400">${reportData.trading_activity.realized_losses.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between font-semibold border-t border-gray-700 pt-2">
+                <span className="text-white">Net Capital Gains</span>
+                <span className="text-green-400">${reportData.trading_activity.net_capital_gains.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Income Sources</h3>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-gray-300">Staking Rewards</span>
+                <span className="text-white">${reportData.income_summary.staking_rewards.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-300">Referral Bonuses</span>
+                <span className="text-white">${reportData.income_summary.referral_bonuses.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-300">Airdrops</span>
+                <span className="text-white">${reportData.income_summary.airdrops.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between font-semibold border-t border-gray-700 pt-2">
+                <span className="text-white">Total Income</span>
+                <span className="text-blue-400">${reportData.income_summary.total_income.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Tax Calculation */}
+        <div className="bg-gray-800 rounded-lg p-6 mb-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Tax Calculation Summary</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <p className="text-gray-400 text-sm mb-2">Taxable Income</p>
+              <p className="text-2xl font-bold text-white">${reportData.tax_calculation.taxable_income.toLocaleString()}</p>
+              <p className="text-gray-400 text-sm">Capital gains + Income - Deductions</p>
+            </div>
+            <div>
+              <p className="text-gray-400 text-sm mb-2">Estimated Tax Owed</p>
+              <p className="text-2xl font-bold text-red-400">${reportData.tax_calculation.estimated_tax_owed.toLocaleString()}</p>
+              <p className="text-gray-400 text-sm">Based on {reportData.tax_calculation.effective_tax_rate}% rate</p>
+            </div>
+            <div>
+              <p className="text-gray-400 text-sm mb-2">Report Status</p>
+              <p className="text-lg font-semibold text-yellow-400">Ready for Download</p>
+              <p className="text-gray-400 text-sm">All data processed</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Generate PDF Button */}
+        <div className="bg-gray-800 rounded-lg p-6 text-center">
+          <h3 className="text-lg font-semibold text-white mb-4">Generate Tax Report PDF</h3>
+          <p className="text-gray-400 mb-6">
+            Download a comprehensive tax report that includes all trading activity, income, and deductions for {reportYear}. 
+            This report can be submitted to tax authorities or provided to your accountant.
+          </p>
+          <button
+            onClick={generatePDF}
+            disabled={generateLoading}
+            className="bg-teal-600 hover:bg-teal-700 disabled:bg-gray-600 text-white px-8 py-3 rounded-lg font-medium flex items-center mx-auto"
+          >
+            {generateLoading ? (
+              <>
+                <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
+                Generating PDF...
+              </>
+            ) : (
+              <>
+                <Download className="w-5 h-5 mr-2" />
+                Download Tax Report PDF
+              </>
+            )}
+          </button>
+          <p className="text-gray-500 text-sm mt-4">
+            Report will include: Trading history, P&L calculations, income summary, deductible expenses, and tax calculations
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Admin Liquidity Management Component  
 const AdminLiquidityManagement = ({ user }) => {
   const [liquidityView, setLiquidityView] = useState('overview');
