@@ -325,7 +325,8 @@ async def admin_login(login_data: AdminLogin):
         admin_users = {
             "admin": {"password": hash_password("admin123"), "role": "admin", "email": "admin@cryptoox.com"},
             "support": {"password": hash_password("support123"), "role": "support", "email": "support@cryptoox.com"},
-            "kyc_agent": {"password": hash_password("kyc123"), "role": "kyc", "email": "kyc@cryptoox.com"}
+            "kyc_agent": {"password": hash_password("kyc123"), "role": "kyc", "email": "kyc@cryptoox.com"},
+            "accountant": {"password": hash_password("accounting123"), "role": "accounting", "email": "accounting@cryptoox.com"}
         }
         
         user_data = admin_users.get(login_data.username)
