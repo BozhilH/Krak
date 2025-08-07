@@ -2688,7 +2688,8 @@ const Header = ({ currentView, setCurrentView, setSelectedPair, marketData }) =>
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
     { id: 'trade', label: 'Trade', icon: TrendingUp },
     { id: 'markets', label: 'Markets', icon: BarChart3 },
-    { id: 'portfolio', label: 'Portfolio', icon: Wallet }
+    { id: 'portfolio', label: 'Portfolio', icon: Wallet },
+    { id: 'atm-locator', label: 'ATM Locator', icon: MapPin }
   ];
 
   // Close dropdowns when clicking outside
