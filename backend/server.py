@@ -48,6 +48,7 @@ class UserRole(str, Enum):
     ADMIN = "admin"
     SUPPORT = "support"
     KYC = "kyc"
+    ACCOUNTING = "accounting"
 
 class TicketStatus(str, Enum):
     OPEN = "open"
