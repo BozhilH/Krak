@@ -183,6 +183,10 @@ function App() {
         {currentView === 'atm-locator' && (
           <ATMLocator />
         )}
+
+        {currentView === 'tax-reports' && (
+          <TaxReports setCurrentView={setCurrentView} />
+        )}
       </main>
 
       <Footer setCurrentView={setCurrentView} />
