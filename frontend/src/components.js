@@ -6626,7 +6626,9 @@ const Components = {
   AdminKYCManagement,
   ATMLocator,
   AdminATMManagement,
-  AdminLiquidityManagement
+  AdminLiquidityManagement,
+  AccountingDashboard,
+  TaxReports
 };
 
 export default Components;
