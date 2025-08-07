@@ -5766,7 +5766,10 @@ const Components = {
   AdminKYCApplicants,
   AdminKYCApplicantDetail,
   ManualKYCManagement,
-  AdminKYCManagement
+  AdminKYCManagement,
+  ATMLocator,
+  AdminATMManagement,
+  AdminLiquidityManagement
 };
 
 export default Components;
