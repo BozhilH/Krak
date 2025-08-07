@@ -46,7 +46,13 @@ import {
   Upload,
   Lock,
   Key,
-  Database
+  Database,
+  MapPin,
+  Navigation,
+  Smartphone,
+  Wifi,
+  Battery,
+  Signal
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Area, AreaChart } from 'recharts';
 // Admin Login Component
