@@ -1255,7 +1255,7 @@ async def get_portfolio_pnl(userId: str, range: str = "24h"):
         
         return {
             "userId": userId,
-            "range": range,
+            "range": time_range,
             "total_balance": base_balance,
             "realized_pnl": realized_pnl,
             "unrealized_pnl": unrealized_pnl,
