@@ -185,6 +185,10 @@ function App() {
           <ATMLocator />
         )}
 
+        {currentView === 'analytics' && (
+          <PortfolioAnalytics setCurrentView={setCurrentView} />
+        )}
+
         {currentView === 'tax-reports' && (
           <TaxReports setCurrentView={setCurrentView} />
         )}
