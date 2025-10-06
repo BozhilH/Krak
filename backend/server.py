@@ -1314,8 +1314,8 @@ async def get_trades_summary(userId: str, range: str = "24h"):
         
         # Trades by date
         trades_by_date = []
-        for i in range(data_points):
-            timestamp = start_date + timedelta(days=i if range != "24h" else 0, hours=i if range == "24h" else 0)
+        for i in builtins_range(data_points):
+            timestamp = start_date + timedelta(days=i if time_range != "24h" else 0, hours=i if time_range == "24h" else 0)
             volume = (total_volume_usd / data_points) * (1 + (i % 3 - 1) * 0.2)
             trades_count = int((total_trades / data_points) * (1 + (i % 5 - 2) * 0.3))
             
