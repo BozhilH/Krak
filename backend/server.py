@@ -1093,6 +1093,256 @@ async def get_market_summary():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# ============================================
+# Portfolio Analytics API Endpoints
+# ============================================
+
+class PortfolioHolding(BaseModel):
+    asset: str
+    symbol: str
+    amount: float
+    value_usd: float
+    percentage: float
+    avg_buy_price: float
+    current_price: float
+    profit_loss: float
+    profit_loss_percentage: float
+
+class PortfolioPnLResponse(BaseModel):
+    total_balance: float
+    realized_pnl: float
+    unrealized_pnl: float
+    total_pnl: float
+    pnl_percentage: float
+    historical_balance: List[Dict[str, Any]]
+    realized_pnl_history: List[Dict[str, Any]]
+    unrealized_pnl_history: List[Dict[str, Any]]
+    staking_rewards: float
+    staking_apr: float
+
+class TradeSummaryResponse(BaseModel):
+    total_trades: int
+    buy_trades: int
+    sell_trades: int
+    total_volume_usd: float
+    volume_by_asset: List[Dict[str, Any]]
+    trades_by_date: List[Dict[str, Any]]
+    avg_trade_size: float
+    largest_trade: float
+    trading_fees_paid: float
+
+@api_router.get("/v1/portfolio/holdings")
+async def get_portfolio_holdings(userId: str):
+    """Get user's portfolio holdings with asset allocation"""
+    try:
+        # Mock portfolio data - in production, fetch from MongoDB user portfolio collection
+        current_prices = {
+            "BTC": 114675.0,
+            "ETH": 3553.33,
+            "XRP": 3.012,
+            "ADA": 0.742,
+            "DOT": 3.633,
+            "LINK": 16.643
+        }
+        
+        # Mock user holdings
+        holdings_data = [
+            {"asset": "Bitcoin", "symbol": "BTC", "amount": 0.5234, "avg_buy_price": 95000.0},
+            {"asset": "Ethereum", "symbol": "ETH", "amount": 2.3456, "avg_buy_price": 2800.0},
+            {"asset": "Ripple", "symbol": "XRP", "amount": 1000.0, "avg_buy_price": 0.65},
+            {"asset": "Cardano", "symbol": "ADA", "amount": 500.0, "avg_buy_price": 0.65},
+            {"asset": "Polkadot", "symbol": "DOT", "amount": 100.0, "avg_buy_price": 4.5},
+            {"asset": "Chainlink", "symbol": "LINK", "amount": 50.0, "avg_buy_price": 14.0}
+        ]
+        
+        total_value = 0.0
+        holdings = []
+        
+        for holding in holdings_data:
+            symbol = holding["symbol"]
+            current_price = current_prices.get(symbol, 0.0)
+            value_usd = holding["amount"] * current_price
+            total_value += value_usd
+            
+            profit_loss = (current_price - holding["avg_buy_price"]) * holding["amount"]
+            profit_loss_percentage = ((current_price - holding["avg_buy_price"]) / holding["avg_buy_price"]) * 100
+            
+            holdings.append({
+                "asset": holding["asset"],
+                "symbol": symbol,
+                "amount": holding["amount"],
+                "value_usd": value_usd,
+                "percentage": 0.0,  # Will be calculated after
+                "avg_buy_price": holding["avg_buy_price"],
+                "current_price": current_price,
+                "profit_loss": profit_loss,
+                "profit_loss_percentage": profit_loss_percentage
+            })
+        
+        # Calculate percentages
+        for holding in holdings:
+            holding["percentage"] = (holding["value_usd"] / total_value) * 100 if total_value > 0 else 0.0
+        
+        return {
+            "userId": userId,
+            "total_value": total_value,
+            "holdings": holdings,
+            "last_updated": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/v1/portfolio/pnl")
+async def get_portfolio_pnl(userId: str, range: str = "24h"):
+    """Get user's profit & loss data with historical trends"""
+    try:
+        # Calculate date range
+        now = datetime.utcnow()
+        if range == "24h":
+            start_date = now - timedelta(hours=24)
+            data_points = 24
+            interval_hours = 1
+        elif range == "7d":
+            start_date = now - timedelta(days=7)
+            data_points = 7
+            interval_hours = 24
+        elif range == "30d":
+            start_date = now - timedelta(days=30)
+            data_points = 30
+            interval_hours = 24
+        elif range == "YTD":
+            start_date = datetime(now.year, 1, 1)
+            data_points = (now - start_date).days + 1
+            interval_hours = 24
+        else:
+            raise HTTPException(status_code=400, detail="Invalid range. Use: 24h, 7d, 30d, YTD")
+        
+        # Mock P&L data
+        base_balance = 125430.50
+        realized_pnl = 8765.43
+        unrealized_pnl = 3456.78
+        total_pnl = realized_pnl + unrealized_pnl
+        pnl_percentage = (total_pnl / (base_balance - total_pnl)) * 100
+        
+        # Generate historical balance data
+        historical_balance = []
+        realized_pnl_history = []
+        unrealized_pnl_history = []
+        
+        for i in range(data_points):
+            timestamp = start_date + timedelta(hours=i * interval_hours)
+            
+            # Simulate balance growth with some volatility
+            balance_variation = base_balance * (1 + (i / data_points) * 0.05 + (i % 3 - 1) * 0.01)
+            realized_variation = realized_pnl * (i / data_points) * (1 + (i % 5 - 2) * 0.05)
+            unrealized_variation = unrealized_pnl * (1 + (i % 7 - 3) * 0.1)
+            
+            historical_balance.append({
+                "timestamp": timestamp.isoformat(),
+                "balance": round(balance_variation, 2)
+            })
+            
+            realized_pnl_history.append({
+                "timestamp": timestamp.isoformat(),
+                "value": round(realized_variation, 2)
+            })
+            
+            unrealized_pnl_history.append({
+                "timestamp": timestamp.isoformat(),
+                "value": round(unrealized_variation, 2)
+            })
+        
+        return {
+            "userId": userId,
+            "range": range,
+            "total_balance": base_balance,
+            "realized_pnl": realized_pnl,
+            "unrealized_pnl": unrealized_pnl,
+            "total_pnl": total_pnl,
+            "pnl_percentage": pnl_percentage,
+            "historical_balance": historical_balance,
+            "realized_pnl_history": realized_pnl_history,
+            "unrealized_pnl_history": unrealized_pnl_history,
+            "staking_rewards": 1234.56,
+            "staking_apr": 5.75,
+            "last_updated": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/v1/trades/summary")
+async def get_trades_summary(userId: str, range: str = "24h"):
+    """Get user's trading summary with volume breakdown"""
+    try:
+        # Calculate date range
+        now = datetime.utcnow()
+        if range == "24h":
+            start_date = now - timedelta(hours=24)
+            data_points = 24
+        elif range == "7d":
+            start_date = now - timedelta(days=7)
+            data_points = 7
+        elif range == "30d":
+            start_date = now - timedelta(days=30)
+            data_points = 30
+        elif range == "YTD":
+            start_date = datetime(now.year, 1, 1)
+            data_points = (now - start_date).days + 1
+        else:
+            raise HTTPException(status_code=400, detail="Invalid range. Use: 24h, 7d, 30d, YTD")
+        
+        # Mock trade data
+        assets = ["BTC", "ETH", "XRP", "ADA", "DOT", "LINK"]
+        total_trades = 156
+        buy_trades = 89
+        sell_trades = 67
+        total_volume_usd = 245678.90
+        trading_fees_paid = 1234.56
+        
+        # Volume by asset
+        volume_by_asset = []
+        for i, asset in enumerate(assets):
+            volume = total_volume_usd * (0.4 if i == 0 else 0.25 if i == 1 else 0.1 / (len(assets) - 2))
+            volume_by_asset.append({
+                "asset": asset,
+                "volume_usd": round(volume, 2),
+                "trades_count": int(total_trades * (0.4 if i == 0 else 0.25 if i == 1 else 0.1 / (len(assets) - 2))),
+                "percentage": round((volume / total_volume_usd) * 100, 2)
+            })
+        
+        # Trades by date
+        trades_by_date = []
+        for i in range(data_points):
+            timestamp = start_date + timedelta(days=i if range != "24h" else 0, hours=i if range == "24h" else 0)
+            volume = (total_volume_usd / data_points) * (1 + (i % 3 - 1) * 0.2)
+            trades_count = int((total_trades / data_points) * (1 + (i % 5 - 2) * 0.3))
+            
+            trades_by_date.append({
+                "timestamp": timestamp.isoformat(),
+                "date": timestamp.strftime("%Y-%m-%d" if range != "24h" else "%Y-%m-%d %H:%M"),
+                "volume_usd": round(volume, 2),
+                "trades_count": max(1, trades_count),
+                "buy_count": int(trades_count * 0.57),
+                "sell_count": int(trades_count * 0.43)
+            })
+        
+        return {
+            "userId": userId,
+            "range": range,
+            "total_trades": total_trades,
+            "buy_trades": buy_trades,
+            "sell_trades": sell_trades,
+            "total_volume_usd": total_volume_usd,
+            "volume_by_asset": volume_by_asset,
+            "trades_by_date": trades_by_date,
+            "avg_trade_size": round(total_volume_usd / total_trades, 2),
+            "largest_trade": 15678.90,
+            "trading_fees_paid": trading_fees_paid,
+            "last_updated": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Include the router in the main app
 app.include_router(api_router)
 
