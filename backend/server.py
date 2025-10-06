@@ -1314,14 +1314,15 @@ async def get_trades_summary(userId: str, range: str = "24h"):
         
         # Trades by date
         trades_by_date = []
-        for i in builtins_range(data_points):
+        import builtins
+        for i in builtins.range(data_points):
             timestamp = start_date + timedelta(days=i if time_range != "24h" else 0, hours=i if time_range == "24h" else 0)
             volume = (total_volume_usd / data_points) * (1 + (i % 3 - 1) * 0.2)
             trades_count = int((total_trades / data_points) * (1 + (i % 5 - 2) * 0.3))
             
             trades_by_date.append({
                 "timestamp": timestamp.isoformat(),
-                "date": timestamp.strftime("%Y-%m-%d" if range != "24h" else "%Y-%m-%d %H:%M"),
+                "date": timestamp.strftime("%Y-%m-%d" if time_range != "24h" else "%Y-%m-%d %H:%M"),
                 "volume_usd": round(volume, 2),
                 "trades_count": max(1, trades_count),
                 "buy_count": int(trades_count * 0.57),
@@ -1330,7 +1331,7 @@ async def get_trades_summary(userId: str, range: str = "24h"):
         
         return {
             "userId": userId,
-            "range": range,
+            "range": time_range,
             "total_trades": total_trades,
             "buy_trades": buy_trades,
             "sell_trades": sell_trades,
