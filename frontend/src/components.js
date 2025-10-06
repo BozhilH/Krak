@@ -7110,6 +7110,7 @@ const Components = {
   ATMLocator,
   AdminATMManagement,
   AdminLiquidityManagement,
+  PortfolioAnalytics,
   AccountingDashboard,
   TaxReports
 };
