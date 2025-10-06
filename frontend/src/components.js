@@ -2493,6 +2493,489 @@ const AdminATMManagement = ({ user }) => {
   );
 };
 
+
+// ============================================
+// Portfolio Analytics Dashboard Component
+// ============================================
+
+const PortfolioAnalytics = ({ setCurrentView }) => {
+  const [loading, setLoading] = useState(true);
+  const [portfolioData, setPortfolioData] = useState(null);
+  const [pnlData, setPnlData] = useState(null);
+  const [tradesData, setTradesData] = useState(null);
+  const [selectedTimeframe, setSelectedTimeframe] = useState('24h');
+  const [theme, setTheme] = useState('dark'); // 'dark' or 'light'
+  const [error, setError] = useState(null);
+
+  // Mock userId - in production, get from auth context
+  const userId = 'user_12345';
+
+  useEffect(() => {
+    fetchAnalyticsData();
+  }, [selectedTimeframe]);
+
+  const fetchAnalyticsData = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      
+      // Fetch all analytics data in parallel
+      const [holdingsRes, pnlRes, tradesRes] = await Promise.all([
+        fetch(`${backendUrl}/api/v1/portfolio/holdings?userId=${userId}`),
+        fetch(`${backendUrl}/api/v1/portfolio/pnl?userId=${userId}&range=${selectedTimeframe}`),
+        fetch(`${backendUrl}/api/v1/trades/summary?userId=${userId}&range=${selectedTimeframe}`)
+      ]);
+
+      if (!holdingsRes.ok || !pnlRes.ok || !tradesRes.ok) {
+        throw new Error('Failed to fetch analytics data');
+      }
+
+      const [holdings, pnl, trades] = await Promise.all([
+        holdingsRes.json(),
+        pnlRes.json(),
+        tradesRes.json()
+      ]);
+
+      setPortfolioData(holdings);
+      setPnlData(pnl);
+      setTradesData(trades);
+    } catch (err) {
+      console.error('Error fetching analytics:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2
+    }).format(amount);
+  };
+
+  const formatPercentage = (value) => {
+    return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
+  };
+
+  // Theme configuration
+  const themeConfig = {
+    dark: {
+      bg: 'bg-gray-900',
+      cardBg: 'bg-gray-800',
+      border: 'border-gray-700',
+      text: 'text-white',
+      textSecondary: 'text-gray-400',
+      accent: 'bg-teal-600',
+      accentHover: 'hover:bg-teal-700',
+      chartAxis: '#9CA3AF',
+      chartGrid: '#374151'
+    },
+    light: {
+      bg: 'bg-white',
+      cardBg: 'bg-blue-50',
+      border: 'border-blue-200',
+      text: 'text-gray-900',
+      textSecondary: 'text-gray-600',
+      accent: 'bg-blue-600',
+      accentHover: 'hover:bg-blue-700',
+      chartAxis: '#6B7280',
+      chartGrid: '#E5E7EB'
+    }
+  };
+
+  const currentTheme = themeConfig[theme];
+
+  if (loading) {
+    return (
+      <div className={`min-h-screen ${currentTheme.bg} p-6`}>
+        <div className="flex items-center justify-center h-64">
+          <RefreshCw className={`w-8 h-8 animate-spin ${currentTheme.textSecondary}`} />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={`min-h-screen ${currentTheme.bg} p-6`}>
+        <div className={`${currentTheme.cardBg} rounded-lg p-6`}>
+          <div className="flex items-center text-red-400">
+            <AlertCircle className="w-6 h-6 mr-2" />
+            <span>Error loading analytics: {error}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`min-h-screen ${currentTheme.bg}`}>
+      {/* Header */}
+      <div className={`border-b ${currentTheme.border} ${currentTheme.cardBg}`}>
+        <div className="px-6 py-4">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
+              <button
+                onClick={() => setCurrentView('dashboard')}
+                className={`mr-4 ${currentTheme.textSecondary} hover:${currentTheme.text}`}
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <h1 className={`text-2xl font-bold ${currentTheme.text}`}>Portfolio Analytics</h1>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              {/* Theme Toggle */}
+              <button
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                className={`${currentTheme.accent} ${currentTheme.accentHover} text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center`}
+              >
+                {theme === 'dark' ? <Sun className="w-4 h-4 mr-2" /> : <Moon className="w-4 h-4 mr-2" />}
+                {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+              </button>
+              
+              {/* Refresh Button */}
+              <button
+                onClick={fetchAnalyticsData}
+                className={`${currentTheme.accent} ${currentTheme.accentHover} text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center`}
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Refresh
+              </button>
+            </div>
+          </div>
+
+          {/* Timeframe Selection */}
+          <div className="flex gap-2">
+            {['24h', '7d', '30d', 'YTD'].map((timeframe) => (
+              <button
+                key={timeframe}
+                onClick={() => setSelectedTimeframe(timeframe)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  selectedTimeframe === timeframe
+                    ? `${currentTheme.accent} text-white`
+                    : `${currentTheme.cardBg} ${currentTheme.text} ${currentTheme.accentHover}`
+                }`}
+              >
+                {timeframe.toUpperCase()}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="p-6">
+        {/* KPI Chips */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className={`${currentTheme.cardBg} rounded-lg p-6 border ${currentTheme.border}`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className={`${currentTheme.textSecondary} text-sm`}>Total Balance</p>
+                <p className={`text-2xl font-bold ${currentTheme.text}`}>
+                  {formatCurrency(pnlData?.total_balance || 0)}
+                </p>
+              </div>
+              <Wallet className="w-8 h-8 text-teal-400" />
+            </div>
+          </div>
+
+          <div className={`${currentTheme.cardBg} rounded-lg p-6 border ${currentTheme.border}`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className={`${currentTheme.textSecondary} text-sm`}>24h P&L</p>
+                <p className={`text-2xl font-bold ${pnlData?.total_pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {formatCurrency(pnlData?.total_pnl || 0)}
+                </p>
+                <p className={`text-sm ${pnlData?.pnl_percentage >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {formatPercentage(pnlData?.pnl_percentage || 0)}
+                </p>
+              </div>
+              <TrendingUp className={`w-8 h-8 ${pnlData?.total_pnl >= 0 ? 'text-green-400' : 'text-red-400'}`} />
+            </div>
+          </div>
+
+          <div className={`${currentTheme.cardBg} rounded-lg p-6 border ${currentTheme.border}`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className={`${currentTheme.textSecondary} text-sm`}>7d P&L</p>
+                <p className={`text-2xl font-bold text-green-400`}>
+                  {formatCurrency((pnlData?.total_pnl || 0) * 1.15)}
+                </p>
+                <p className="text-sm text-green-400">+15.2%</p>
+              </div>
+              <BarChart3 className="w-8 h-8 text-green-400" />
+            </div>
+          </div>
+
+          <div className={`${currentTheme.cardBg} rounded-lg p-6 border ${currentTheme.border}`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className={`${currentTheme.textSecondary} text-sm`}>Staking APR</p>
+                <p className={`text-2xl font-bold ${currentTheme.text}`}>
+                  {pnlData?.staking_apr?.toFixed(2)}%
+                </p>
+                <p className={`text-sm ${currentTheme.textSecondary}`}>
+                  {formatCurrency(pnlData?.staking_rewards || 0)} earned
+                </p>
+              </div>
+              <PieChart className="w-8 h-8 text-blue-400" />
+            </div>
+          </div>
+        </div>
+
+        {/* Asset Allocation Pie Chart */}
+        <div className={`${currentTheme.cardBg} rounded-lg p-6 mb-8 border ${currentTheme.border}`}>
+          <h3 className={`text-lg font-semibold ${currentTheme.text} mb-4`}>Asset Allocation</h3>
+          <div className="h-80 flex items-center justify-center">
+            <div className={`${currentTheme.textSecondary}`}>
+              {portfolioData?.holdings && portfolioData.holdings.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                  {/* Visual pie representation using divs */}
+                  <div className="relative w-64 h-64 mx-auto">
+                    {portfolioData.holdings.map((holding, index) => {
+                      const colors = ['#14b8a6', '#3b82f6', '#8b5cf6', '#f59e0b', '#10b981', '#ef4444'];
+                      const startAngle = portfolioData.holdings.slice(0, index).reduce((sum, h) => sum + (h.percentage * 3.6), 0);
+                      const endAngle = startAngle + (holding.percentage * 3.6);
+                      
+                      return (
+                        <div key={holding.symbol} className="absolute inset-0 flex items-center justify-center">
+                          <div 
+                            className="absolute w-64 h-64 rounded-full"
+                            style={{
+                              background: `conic-gradient(from ${startAngle}deg, ${colors[index % colors.length]} ${startAngle}deg ${endAngle}deg, transparent ${endAngle}deg)`
+                            }}
+                          />
+                        </div>
+                      );
+                    })}
+                    <div className={`absolute inset-0 m-16 rounded-full ${currentTheme.cardBg}`} />
+                  </div>
+
+                  {/* Legend */}
+                  <div className="space-y-3">
+                    {portfolioData.holdings.map((holding, index) => {
+                      const colors = ['bg-teal-500', 'bg-blue-500', 'bg-purple-500', 'bg-yellow-500', 'bg-green-500', 'bg-red-500'];
+                      return (
+                        <div key={holding.symbol} className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className={`w-4 h-4 rounded-full ${colors[index % colors.length]} mr-3`} />
+                            <span className={currentTheme.text}>{holding.asset}</span>
+                          </div>
+                          <div className="text-right">
+                            <p className={`font-medium ${currentTheme.text}`}>
+                              {holding.percentage.toFixed(2)}%
+                            </p>
+                            <p className={`text-sm ${currentTheme.textSecondary}`}>
+                              {formatCurrency(holding.value_usd)}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <p>No holdings data available</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Historical Balance & P&L Line Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div className={`${currentTheme.cardBg} rounded-lg p-6 border ${currentTheme.border}`}>
+            <h3 className={`text-lg font-semibold ${currentTheme.text} mb-4`}>Historical Balance</h3>
+            <div className="h-64">
+              {pnlData?.historical_balance && (
+                <div className={`h-full flex items-end justify-around ${currentTheme.textSecondary}`}>
+                  {pnlData.historical_balance.slice(-10).map((point, index) => {
+                    const maxBalance = Math.max(...pnlData.historical_balance.map(p => p.balance));
+                    const height = (point.balance / maxBalance) * 100;
+                    return (
+                      <div key={index} className="flex-1 mx-1 flex flex-col items-center">
+                        <div 
+                          className="w-full bg-gradient-to-t from-teal-600 to-teal-400 rounded-t transition-all hover:opacity-80"
+                          style={{ height: `${height}%` }}
+                          title={formatCurrency(point.balance)}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className={`${currentTheme.cardBg} rounded-lg p-6 border ${currentTheme.border}`}>
+            <h3 className={`text-lg font-semibold ${currentTheme.text} mb-4`}>Realized vs Unrealized P&L</h3>
+            <div className="h-64 flex items-center justify-center">
+              <div className="space-y-6 w-full">
+                <div>
+                  <div className="flex justify-between mb-2">
+                    <span className={currentTheme.text}>Realized P&L</span>
+                    <span className="text-green-400">{formatCurrency(pnlData?.realized_pnl || 0)}</span>
+                  </div>
+                  <div className="h-4 bg-gray-700 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-green-500 transition-all"
+                      style={{ width: `${Math.min(100, (pnlData?.realized_pnl / (pnlData?.total_pnl || 1)) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <div className="flex justify-between mb-2">
+                    <span className={currentTheme.text}>Unrealized P&L</span>
+                    <span className="text-blue-400">{formatCurrency(pnlData?.unrealized_pnl || 0)}</span>
+                  </div>
+                  <div className="h-4 bg-gray-700 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-blue-500 transition-all"
+                      style={{ width: `${Math.min(100, (pnlData?.unrealized_pnl / (pnlData?.total_pnl || 1)) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className={`pt-4 border-t ${currentTheme.border}`}>
+                  <div className="flex justify-between">
+                    <span className={`${currentTheme.text} font-semibold`}>Total P&L</span>
+                    <span className={`font-semibold ${pnlData?.total_pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {formatCurrency(pnlData?.total_pnl || 0)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Trade Volume by Asset */}
+        <div className={`${currentTheme.cardBg} rounded-lg p-6 mb-8 border ${currentTheme.border}`}>
+          <h3 className={`text-lg font-semibold ${currentTheme.text} mb-4`}>Trade Volume by Asset</h3>
+          <div className="h-80">
+            {tradesData?.volume_by_asset && (
+              <div className="h-full flex items-end justify-around gap-4">
+                {tradesData.volume_by_asset.map((asset, index) => {
+                  const maxVolume = Math.max(...tradesData.volume_by_asset.map(a => a.volume_usd));
+                  const height = (asset.volume_usd / maxVolume) * 100;
+                  const colors = ['bg-teal-500', 'bg-blue-500', 'bg-purple-500', 'bg-yellow-500', 'bg-green-500', 'bg-red-500'];
+                  
+                  return (
+                    <div key={asset.asset} className="flex-1 flex flex-col items-center">
+                      <div 
+                        className={`w-full ${colors[index % colors.length]} rounded-t transition-all hover:opacity-80 cursor-pointer`}
+                        style={{ height: `${height}%` }}
+                        title={`${asset.asset}: ${formatCurrency(asset.volume_usd)}`}
+                      />
+                      <p className={`text-sm ${currentTheme.text} mt-2 font-medium`}>{asset.asset}</p>
+                      <p className={`text-xs ${currentTheme.textSecondary}`}>
+                        {formatCurrency(asset.volume_usd)}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Holdings Table */}
+        <div className={`${currentTheme.cardBg} rounded-lg p-6 border ${currentTheme.border}`}>
+          <h3 className={`text-lg font-semibold ${currentTheme.text} mb-4`}>Holdings Detail</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className={`border-b ${currentTheme.border}`}>
+                <tr>
+                  <th className={`text-left py-3 px-4 ${currentTheme.text}`}>Asset</th>
+                  <th className={`text-right py-3 px-4 ${currentTheme.text}`}>Amount</th>
+                  <th className={`text-right py-3 px-4 ${currentTheme.text}`}>Value</th>
+                  <th className={`text-right py-3 px-4 ${currentTheme.text}`}>Avg Buy Price</th>
+                  <th className={`text-right py-3 px-4 ${currentTheme.text}`}>Current Price</th>
+                  <th className={`text-right py-3 px-4 ${currentTheme.text}`}>P&L</th>
+                  <th className={`text-right py-3 px-4 ${currentTheme.text}`}>Allocation</th>
+                </tr>
+              </thead>
+              <tbody>
+                {portfolioData?.holdings?.map((holding) => (
+                  <tr key={holding.symbol} className={`border-b ${currentTheme.border}`}>
+                    <td className={`py-3 px-4 ${currentTheme.text} font-medium`}>
+                      {holding.asset} ({holding.symbol})
+                    </td>
+                    <td className={`text-right py-3 px-4 ${currentTheme.text}`}>
+                      {holding.amount.toFixed(4)}
+                    </td>
+                    <td className={`text-right py-3 px-4 ${currentTheme.text}`}>
+                      {formatCurrency(holding.value_usd)}
+                    </td>
+                    <td className={`text-right py-3 px-4 ${currentTheme.textSecondary}`}>
+                      {formatCurrency(holding.avg_buy_price)}
+                    </td>
+                    <td className={`text-right py-3 px-4 ${currentTheme.textSecondary}`}>
+                      {formatCurrency(holding.current_price)}
+                    </td>
+                    <td className={`text-right py-3 px-4 ${holding.profit_loss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {formatCurrency(holding.profit_loss)}
+                      <span className="text-sm ml-2">
+                        ({formatPercentage(holding.profit_loss_percentage)})
+                      </span>
+                    </td>
+                    <td className={`text-right py-3 px-4 ${currentTheme.text}`}>
+                      {holding.percentage.toFixed(2)}%
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Trading Statistics */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+          <div className={`${currentTheme.cardBg} rounded-lg p-6 border ${currentTheme.border}`}>
+            <h4 className={`text-sm ${currentTheme.textSecondary} mb-2`}>Total Trades</h4>
+            <p className={`text-3xl font-bold ${currentTheme.text}`}>{tradesData?.total_trades || 0}</p>
+            <div className="mt-3 flex gap-4">
+              <div>
+                <p className={`text-xs ${currentTheme.textSecondary}`}>Buy</p>
+                <p className="text-green-400 font-medium">{tradesData?.buy_trades || 0}</p>
+              </div>
+              <div>
+                <p className={`text-xs ${currentTheme.textSecondary}`}>Sell</p>
+                <p className="text-red-400 font-medium">{tradesData?.sell_trades || 0}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className={`${currentTheme.cardBg} rounded-lg p-6 border ${currentTheme.border}`}>
+            <h4 className={`text-sm ${currentTheme.textSecondary} mb-2`}>Total Volume</h4>
+            <p className={`text-3xl font-bold ${currentTheme.text}`}>
+              {formatCurrency(tradesData?.total_volume_usd || 0)}
+            </p>
+            <p className={`text-sm ${currentTheme.textSecondary} mt-2`}>
+              Avg: {formatCurrency(tradesData?.avg_trade_size || 0)}
+            </p>
+          </div>
+
+          <div className={`${currentTheme.cardBg} rounded-lg p-6 border ${currentTheme.border}`}>
+            <h4 className={`text-sm ${currentTheme.textSecondary} mb-2`}>Trading Fees Paid</h4>
+            <p className={`text-3xl font-bold ${currentTheme.text}`}>
+              {formatCurrency(tradesData?.trading_fees_paid || 0)}
+            </p>
+            <p className={`text-sm ${currentTheme.textSecondary} mt-2`}>
+              Largest: {formatCurrency(tradesData?.largest_trade || 0)}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
 // Admin Accounting Dashboard Component
 const AccountingDashboard = ({ user }) => {
   const [accountingView, setAccountingView] = useState('overview');
