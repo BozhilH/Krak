@@ -1276,8 +1276,9 @@ async def get_trades_summary(userId: str, range: str = "24h"):
     """Get user's trading summary with volume breakdown"""
     try:
         # Calculate date range
+        time_range = range  # Avoid using 'range' directly as it shadows builtin
         now = datetime.utcnow()
-        if range == "24h":
+        if time_range == "24h":
             start_date = now - timedelta(hours=24)
             data_points = 24
         elif range == "7d":
