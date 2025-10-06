@@ -20,6 +20,7 @@ const {
   AboutUs,
   AdminPanel,
   ATMLocator,
+  PortfolioAnalytics,
   TaxReports
 } = Components;
 
