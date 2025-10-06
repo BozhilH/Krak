@@ -10,7 +10,7 @@ import time
 from typing import Dict, Any, List
 
 # Backend URL from environment
-BACKEND_URL = "https://1b94e735-84fd-4a3c-acdf-7f62e40cce2a.preview.emergentagent.com/api"
+BACKEND_URL = "https://cryptooxadmin.preview.emergentagent.com/api"
 
 # Test pairs for validation
 TEST_PAIRS = ["BTCUSD", "ETHUSD", "XRPUSD", "ADAUSD", "DOTUSD"]
