@@ -1203,15 +1203,15 @@ async def get_portfolio_pnl(userId: str, range: str = "24h"):
             start_date = now - timedelta(hours=24)
             data_points = 24
             interval_hours = 1
-        elif range == "7d":
+        elif time_range == "7d":
             start_date = now - timedelta(days=7)
             data_points = 7
             interval_hours = 24
-        elif range == "30d":
+        elif time_range == "30d":
             start_date = now - timedelta(days=30)
             data_points = 30
             interval_hours = 24
-        elif range == "YTD":
+        elif time_range == "YTD":
             start_date = datetime(now.year, 1, 1)
             data_points = (now - start_date).days + 1
             interval_hours = 24
