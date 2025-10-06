@@ -4854,6 +4854,7 @@ const Header = ({ currentView, setCurrentView, setSelectedPair, marketData }) =>
     { id: 'trade', label: 'Trade', icon: TrendingUp },
     { id: 'markets', label: 'Markets', icon: BarChart3 },
     { id: 'portfolio', label: 'Portfolio', icon: Wallet },
+    { id: 'analytics', label: 'Analytics', icon: PieChart },
     { id: 'atm-locator', label: 'ATM Locator', icon: MapPin },
     { id: 'tax-reports', label: 'Tax Reports', icon: FileSpreadsheet }
   ];
