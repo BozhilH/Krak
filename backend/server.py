@@ -1193,11 +1193,10 @@ async def get_portfolio_holdings(userId: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.get("/v1/portfolio/pnl")
-async def get_portfolio_pnl(userId: str, range: str = "24h"):
+async def get_portfolio_pnl(userId: str, time_range: str = "24h"):
     """Get user's profit & loss data with historical trends"""
     try:
         # Calculate date range
-        time_range = range  # Avoid using 'range' directly as it shadows builtin
         now = datetime.utcnow()
         if time_range == "24h":
             start_date = now - timedelta(hours=24)
