@@ -6,6 +6,7 @@ import {
   Wallet,
   ArrowUpRight,
   ArrowDownRight,
+  ArrowLeft,
   Search,
   Bell,
   User,
