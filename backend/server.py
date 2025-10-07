@@ -1271,11 +1271,10 @@ async def get_portfolio_pnl(userId: str, time_range: str = "24h"):
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.get("/v1/trades/summary")
-async def get_trades_summary(userId: str, range: str = "24h"):
+async def get_trades_summary(userId: str, time_range: str = "24h"):
     """Get user's trading summary with volume breakdown"""
     try:
         # Calculate date range
-        time_range = range  # Avoid using 'range' directly as it shadows builtin
         now = datetime.utcnow()
         if time_range == "24h":
             start_date = now - timedelta(hours=24)
