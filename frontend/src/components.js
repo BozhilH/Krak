@@ -2524,8 +2524,8 @@ const PortfolioAnalytics = ({ setCurrentView }) => {
       // Fetch all analytics data in parallel
       const [holdingsRes, pnlRes, tradesRes] = await Promise.all([
         fetch(`${backendUrl}/api/v1/portfolio/holdings?userId=${userId}`),
-        fetch(`${backendUrl}/api/v1/portfolio/pnl?userId=${userId}&range=${selectedTimeframe}`),
-        fetch(`${backendUrl}/api/v1/trades/summary?userId=${userId}&range=${selectedTimeframe}`)
+        fetch(`${backendUrl}/api/v1/portfolio/pnl?userId=${userId}&time_range=${selectedTimeframe}`),
+        fetch(`${backendUrl}/api/v1/trades/summary?userId=${userId}&time_range=${selectedTimeframe}`)
       ]);
 
       if (!holdingsRes.ok || !pnlRes.ok || !tradesRes.ok) {
