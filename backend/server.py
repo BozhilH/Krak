@@ -1343,6 +1343,236 @@ async def get_trades_summary(userId: str, time_range: str = "24h"):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# ============================================
+# Comparative Analytics & Benchmarks API
+# ============================================
+
+@api_router.get("/v1/benchmarks")
+async def get_market_benchmarks(symbols: str = "BTC,ETH", time_range: str = "30d"):
+    """Get market benchmark data for comparative analysis"""
+    try:
+        # Parse symbols
+        symbol_list = [s.strip() for s in symbols.split(',')]
+        
+        # Calculate date range
+        now = datetime.utcnow()
+        if time_range == "24h":
+            start_date = now - timedelta(hours=24)
+            data_points = 24
+            interval_label = "hour"
+        elif time_range == "7d":
+            start_date = now - timedelta(days=7)
+            data_points = 7
+            interval_label = "day"
+        elif time_range == "30d":
+            start_date = now - timedelta(days=30)
+            data_points = 30
+            interval_label = "day"
+        elif time_range == "YTD":
+            start_date = datetime(now.year, 1, 1)
+            data_points = (now - start_date).days + 1
+            interval_label = "day"
+        else:
+            raise HTTPException(status_code=400, detail="Invalid range. Use: 24h, 7d, 30d, YTD")
+        
+        # Mock benchmark data with realistic performance patterns
+        benchmarks = {}
+        
+        # Generate historical performance for each symbol
+        for symbol in symbol_list:
+            # Base performance characteristics
+            if symbol == "BTC":
+                base_value = 100.0
+                volatility = 0.03
+                trend = 0.002  # 0.2% daily growth trend
+            elif symbol == "ETH":
+                base_value = 100.0
+                volatility = 0.04
+                trend = 0.0025  # 0.25% daily growth trend
+            elif symbol == "MARKET_INDEX":
+                base_value = 100.0
+                volatility = 0.02
+                trend = 0.0015  # 0.15% daily growth trend
+            else:
+                base_value = 100.0
+                volatility = 0.05
+                trend = 0.001
+            
+            # Generate price history
+            price_history = []
+            current_value = base_value
+            
+            for i in range(data_points):
+                if time_range == "24h":
+                    timestamp = start_date + timedelta(hours=i)
+                else:
+                    timestamp = start_date + timedelta(days=i)
+                
+                # Simulate price movement with trend and volatility
+                import random
+                random.seed(hash(f"{symbol}_{i}_{time_range}"))  # Deterministic randomness
+                daily_change = trend + (random.random() - 0.5) * volatility
+                current_value *= (1 + daily_change)
+                
+                price_history.append({
+                    "timestamp": timestamp.isoformat(),
+                    "date": timestamp.strftime("%Y-%m-%d" if time_range != "24h" else "%Y-%m-%d %H:%M"),
+                    "value": round(current_value, 2),
+                    "change_percent": round(daily_change * 100, 2)
+                })
+            
+            # Calculate overall statistics
+            start_value = price_history[0]["value"]
+            end_value = price_history[-1]["value"]
+            total_return = ((end_value - start_value) / start_value) * 100
+            
+            # Calculate volatility (standard deviation of returns)
+            returns = [p["change_percent"] for p in price_history[1:]]
+            mean_return = sum(returns) / len(returns) if returns else 0
+            variance = sum((r - mean_return) ** 2 for r in returns) / len(returns) if returns else 0
+            std_dev = variance ** 0.5
+            
+            benchmarks[symbol] = {
+                "symbol": symbol,
+                "name": {
+                    "BTC": "Bitcoin",
+                    "ETH": "Ethereum",
+                    "MARKET_INDEX": "Crypto Market Index"
+                }.get(symbol, symbol),
+                "current_value": round(end_value, 2),
+                "start_value": round(start_value, 2),
+                "total_return_percent": round(total_return, 2),
+                "volatility_percent": round(std_dev, 2),
+                "sharpe_ratio": round(mean_return / std_dev if std_dev > 0 else 0, 2),
+                "price_history": price_history,
+                "highest_value": round(max(p["value"] for p in price_history), 2),
+                "lowest_value": round(min(p["value"] for p in price_history), 2)
+            }
+        
+        # Add market index if not explicitly requested
+        if "MARKET_INDEX" not in symbol_list and len(symbol_list) <= 2:
+            symbol_list.append("MARKET_INDEX")
+            # Generate market index data (already done in loop above if added)
+        
+        return {
+            "time_range": time_range,
+            "start_date": start_date.isoformat(),
+            "end_date": now.isoformat(),
+            "data_points": data_points,
+            "interval": interval_label,
+            "benchmarks": benchmarks,
+            "last_updated": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/v1/portfolio/comparison")
+async def get_portfolio_comparison(userId: str, time_range: str = "30d"):
+    """Get portfolio performance comparison with benchmarks including correlation and beta"""
+    try:
+        # Get portfolio performance data
+        pnl_data = await get_portfolio_pnl(userId, time_range)
+        
+        # Get benchmark data
+        benchmarks_data = await get_market_benchmarks("BTC,ETH,MARKET_INDEX", time_range)
+        
+        # Calculate portfolio performance normalized to 100
+        portfolio_history = []
+        if pnl_data["historical_balance"]:
+            start_balance = pnl_data["historical_balance"][0]["balance"]
+            
+            for point in pnl_data["historical_balance"]:
+                normalized_value = (point["balance"] / start_balance) * 100
+                portfolio_history.append({
+                    "timestamp": point["timestamp"],
+                    "value": round(normalized_value, 2),
+                    "balance": point["balance"]
+                })
+        
+        # Calculate correlation and beta vs each benchmark
+        comparisons = {}
+        
+        for symbol, benchmark in benchmarks_data["benchmarks"].items():
+            # Get returns for correlation calculation
+            portfolio_returns = []
+            benchmark_returns = []
+            
+            if len(portfolio_history) > 1 and len(benchmark["price_history"]) > 1:
+                for i in range(1, min(len(portfolio_history), len(benchmark["price_history"]))):
+                    port_ret = ((portfolio_history[i]["value"] - portfolio_history[i-1]["value"]) / 
+                               portfolio_history[i-1]["value"]) * 100
+                    bench_ret = benchmark["price_history"][i]["change_percent"]
+                    
+                    portfolio_returns.append(port_ret)
+                    benchmark_returns.append(bench_ret)
+                
+                # Calculate correlation coefficient
+                if portfolio_returns and benchmark_returns:
+                    n = len(portfolio_returns)
+                    mean_p = sum(portfolio_returns) / n
+                    mean_b = sum(benchmark_returns) / n
+                    
+                    covariance = sum((portfolio_returns[i] - mean_p) * (benchmark_returns[i] - mean_b) 
+                                   for i in range(n)) / n
+                    
+                    std_p = (sum((r - mean_p) ** 2 for r in portfolio_returns) / n) ** 0.5
+                    std_b = (sum((r - mean_b) ** 2 for r in benchmark_returns) / n) ** 0.5
+                    
+                    correlation = covariance / (std_p * std_b) if (std_p * std_b) > 0 else 0
+                    
+                    # Calculate beta (portfolio volatility relative to benchmark)
+                    beta = covariance / (std_b ** 2) if std_b > 0 else 1.0
+                    
+                    # Calculate alpha (excess return)
+                    portfolio_return = pnl_data["pnl_percentage"]
+                    benchmark_return = benchmark["total_return_percent"]
+                    alpha = portfolio_return - (beta * benchmark_return)
+                else:
+                    correlation = 0
+                    beta = 1.0
+                    alpha = 0
+            else:
+                correlation = 0
+                beta = 1.0
+                alpha = 0
+            
+            comparisons[symbol] = {
+                "benchmark_name": benchmark["name"],
+                "benchmark_return": benchmark["total_return_percent"],
+                "portfolio_return": pnl_data["pnl_percentage"],
+                "outperformance": round(pnl_data["pnl_percentage"] - benchmark["total_return_percent"], 2),
+                "correlation": round(correlation, 3),
+                "beta": round(beta, 3),
+                "alpha": round(alpha, 2),
+                "correlation_interpretation": (
+                    "Strong Positive" if correlation > 0.7 else
+                    "Moderate Positive" if correlation > 0.3 else
+                    "Weak/No Correlation" if correlation > -0.3 else
+                    "Moderate Negative" if correlation > -0.7 else
+                    "Strong Negative"
+                ),
+                "beta_interpretation": (
+                    "High Volatility (>1)" if beta > 1.2 else
+                    "Similar Volatility" if beta > 0.8 else
+                    "Low Volatility (<1)"
+                )
+            }
+        
+        return {
+            "userId": userId,
+            "time_range": time_range,
+            "portfolio_performance": {
+                "total_return_percent": pnl_data["pnl_percentage"],
+                "total_pnl": pnl_data["total_pnl"],
+                "normalized_history": portfolio_history
+            },
+            "benchmarks": benchmarks_data["benchmarks"],
+            "comparisons": comparisons,
+            "last_updated": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Include the router in the main app
 app.include_router(api_router)
 
