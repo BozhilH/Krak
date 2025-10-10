@@ -264,6 +264,22 @@ backend:
         agent: "main"
         comment: "Implemented 3 new API endpoints for Portfolio Analytics Phase 1: GET /v1/portfolio/holdings (asset allocation data with percentages), GET /v1/portfolio/pnl (P&L calculations with historical trends), GET /v1/trades/summary (trade volume breakdown by asset). All endpoints return mock data with proper MongoDB-ready structure. Fixed Python 'range' keyword shadowing issue by renaming parameter to 'time_range'. All endpoints tested via curl and working correctly."
       - working: true
+
+  - task: "Comparative Analytics Backend API - Phase 2"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented 2 new API endpoints for Comparative Analytics Phase 2: GET /v1/benchmarks (market benchmark data with BTC, ETH, MARKET_INDEX historical performance), GET /v1/portfolio/comparison (portfolio vs benchmarks with correlation, beta, and alpha calculations). Benchmarks endpoint generates realistic price history with volatility and trend patterns. Comparison endpoint calculates: correlation coefficient, beta (portfolio volatility vs benchmark), alpha (excess return), and provides interpretations. All endpoints tested via curl and working correctly."
+      - working: true
+        agent: "main"
+        comment: "✅ BACKEND APIS TESTED AND WORKING: Benchmarks endpoint returns BTC total return +4.61%, volatility 0.88%, Sharpe ratio 0.18. Comparison endpoint shows portfolio return +10.80% vs BTC +4.61%, outperformance +6.19%, correlation 0.183, beta 0.282, alpha +9.5. All calculations accurate. Response times excellent. Ready for frontend integration."
+
         agent: "main"
         comment: "✅ BACKEND APIS TESTED AND WORKING: All 3 portfolio analytics endpoints functional. /v1/portfolio/holdings returns $72,934 total value with 6 assets. /v1/portfolio/pnl returns P&L data with realized ($8,765), unrealized ($3,456), total ($12,222), historical balance/PnL arrays. /v1/trades/summary returns 156 trades, $245,678 volume, volume breakdown by asset. Response times excellent. Ready for frontend integration."
 
