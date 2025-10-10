@@ -2976,6 +2976,318 @@ const PortfolioAnalytics = ({ setCurrentView }) => {
   );
 };
 
+// ============================================
+// Comparative Analytics Component (Phase 2)
+// ============================================
+
+const ComparativeAnalytics = ({ userId, selectedTimeframe, theme }) => {
+  const [loading, setLoading] = useState(true);
+  const [comparisonData, setComparisonData] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchComparisonData();
+  }, [selectedTimeframe]);
+
+  const fetchComparisonData = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const response = await fetch(
+        `${backendUrl}/api/v1/portfolio/comparison?userId=${userId}&time_range=${selectedTimeframe}`
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch comparison data');
+      }
+
+      const data = await response.json();
+      setComparisonData(data);
+    } catch (err) {
+      console.error('Error fetching comparison data:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2
+    }).format(amount);
+  };
+
+  const formatPercentage = (value) => {
+    return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
+  };
+
+  // Theme configuration
+  const themeConfig = {
+    dark: {
+      bg: 'bg-gray-900',
+      cardBg: 'bg-gray-800',
+      border: 'border-gray-700',
+      text: 'text-white',
+      textSecondary: 'text-gray-400',
+      accent: 'bg-teal-600',
+      accentHover: 'hover:bg-teal-700',
+    },
+    light: {
+      bg: 'bg-white',
+      cardBg: 'bg-blue-50',
+      border: 'border-blue-200',
+      text: 'text-gray-900',
+      textSecondary: 'text-gray-600',
+      accent: 'bg-blue-600',
+      accentHover: 'hover:bg-blue-700',
+    }
+  };
+
+  const currentTheme = themeConfig[theme];
+
+  if (loading) {
+    return (
+      <div className={`${currentTheme.cardBg} rounded-lg p-6 border ${currentTheme.border}`}>
+        <div className="flex items-center justify-center h-64">
+          <RefreshCw className={`w-8 h-8 animate-spin ${currentTheme.textSecondary}`} />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={`${currentTheme.cardBg} rounded-lg p-6 border ${currentTheme.border}`}>
+        <div className="flex items-center text-red-400">
+          <AlertCircle className="w-6 h-6 mr-2" />
+          <span>Error loading comparison data: {error}</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!comparisonData) return null;
+
+  return (
+    <div className="space-y-6 mt-8">
+      {/* Section Header */}
+      <div className="flex items-center justify-between">
+        <h2 className={`text-2xl font-bold ${currentTheme.text}`}>Comparative Analytics</h2>
+        <button
+          onClick={fetchComparisonData}
+          className={`${currentTheme.accent} ${currentTheme.accentHover} text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center`}
+        >
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Refresh
+        </button>
+      </div>
+
+      {/* Performance Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {Object.entries(comparisonData.comparisons).map(([symbol, comparison]) => (
+          <div key={symbol} className={`${currentTheme.cardBg} rounded-lg p-6 border ${currentTheme.border}`}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className={`text-lg font-semibold ${currentTheme.text}`}>{comparison.benchmark_name}</h3>
+              {comparison.outperformance >= 0 ? (
+                <TrendingUp className="w-6 h-6 text-green-400" />
+              ) : (
+                <TrendingDown className="w-6 h-6 text-red-400" />
+              )}
+            </div>
+            
+            <div className="space-y-3">
+              <div>
+                <p className={`text-xs ${currentTheme.textSecondary}`}>Your Return</p>
+                <p className={`text-2xl font-bold ${comparison.portfolio_return >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {formatPercentage(comparison.portfolio_return)}
+                </p>
+              </div>
+              
+              <div>
+                <p className={`text-xs ${currentTheme.textSecondary}`}>Benchmark Return</p>
+                <p className={`text-lg font-medium ${currentTheme.text}`}>
+                  {formatPercentage(comparison.benchmark_return)}
+                </p>
+              </div>
+              
+              <div className={`pt-3 border-t ${currentTheme.border}`}>
+                <p className={`text-xs ${currentTheme.textSecondary}`}>Outperformance</p>
+                <p className={`text-xl font-bold ${comparison.outperformance >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {formatPercentage(comparison.outperformance)}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Performance Comparison Chart */}
+      <div className={`${currentTheme.cardBg} rounded-lg p-6 border ${currentTheme.border}`}>
+        <h3 className={`text-lg font-semibold ${currentTheme.text} mb-4`}>Performance Comparison</h3>
+        <div className="h-80">
+          {comparisonData.portfolio_performance.normalized_history && (
+            <div className="h-full flex items-end justify-around gap-1">
+              {comparisonData.portfolio_performance.normalized_history.slice(-20).map((point, index) => {
+                const portfolioHeight = Math.max(10, Math.min(100, point.value));
+                const btcPoint = comparisonData.benchmarks.BTC?.price_history[index];
+                const ethPoint = comparisonData.benchmarks.ETH?.price_history[index];
+                const btcHeight = btcPoint ? Math.max(10, Math.min(100, btcPoint.value)) : 0;
+                const ethHeight = ethPoint ? Math.max(10, Math.min(100, ethPoint.value)) : 0;
+                
+                return (
+                  <div key={index} className="flex-1 flex flex-col items-center gap-1">
+                    {/* Portfolio */}
+                    <div 
+                      className="w-full bg-gradient-to-t from-teal-600 to-teal-400 rounded-t transition-all hover:opacity-80"
+                      style={{ height: `${portfolioHeight}%` }}
+                      title={`Your Portfolio: ${point.value.toFixed(2)}`}
+                    />
+                    {/* BTC */}
+                    <div 
+                      className="w-full bg-gradient-to-t from-orange-600 to-orange-400 rounded-t transition-all hover:opacity-80"
+                      style={{ height: `${btcHeight}%` }}
+                      title={`BTC: ${btcPoint?.value.toFixed(2) || 'N/A'}`}
+                    />
+                    {/* ETH */}
+                    <div 
+                      className="w-full bg-gradient-to-t from-purple-600 to-purple-400 rounded-t transition-all hover:opacity-80"
+                      style={{ height: `${ethHeight}%` }}
+                      title={`ETH: ${ethPoint?.value.toFixed(2) || 'N/A'}`}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+        
+        {/* Legend */}
+        <div className="flex justify-center gap-6 mt-4">
+          <div className="flex items-center">
+            <div className="w-4 h-4 bg-teal-500 rounded mr-2" />
+            <span className={`text-sm ${currentTheme.text}`}>Your Portfolio</span>
+          </div>
+          <div className="flex items-center">
+            <div className="w-4 h-4 bg-orange-500 rounded mr-2" />
+            <span className={`text-sm ${currentTheme.text}`}>Bitcoin</span>
+          </div>
+          <div className="flex items-center">
+            <div className="w-4 h-4 bg-purple-500 rounded mr-2" />
+            <span className={`text-sm ${currentTheme.text}`}>Ethereum</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Correlation & Beta Analysis */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Correlation */}
+        <div className={`${currentTheme.cardBg} rounded-lg p-6 border ${currentTheme.border}`}>
+          <h3 className={`text-lg font-semibold ${currentTheme.text} mb-4`}>Correlation Analysis</h3>
+          <p className={`text-sm ${currentTheme.textSecondary} mb-4`}>
+            How closely your portfolio moves with each benchmark
+          </p>
+          
+          <div className="space-y-4">
+            {Object.entries(comparisonData.comparisons).map(([symbol, comparison]) => (
+              <div key={symbol}>
+                <div className="flex justify-between mb-2">
+                  <span className={currentTheme.text}>{comparison.benchmark_name}</span>
+                  <div className="text-right">
+                    <span className={`font-bold ${currentTheme.text}`}>{comparison.correlation.toFixed(3)}</span>
+                    <span className={`text-xs ${currentTheme.textSecondary} ml-2`}>
+                      ({comparison.correlation_interpretation})
+                    </span>
+                  </div>
+                </div>
+                <div className="h-3 bg-gray-700 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full transition-all ${
+                      Math.abs(comparison.correlation) > 0.7 ? 'bg-green-500' :
+                      Math.abs(comparison.correlation) > 0.3 ? 'bg-yellow-500' :
+                      'bg-gray-500'
+                    }`}
+                    style={{ width: `${Math.abs(comparison.correlation) * 100}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Beta */}
+        <div className={`${currentTheme.cardBg} rounded-lg p-6 border ${currentTheme.border}`}>
+          <h3 className={`text-lg font-semibold ${currentTheme.text} mb-4`}>Beta Analysis</h3>
+          <p className={`text-sm ${currentTheme.textSecondary} mb-4`}>
+            Your portfolio's volatility relative to each benchmark
+          </p>
+          
+          <div className="space-y-4">
+            {Object.entries(comparisonData.comparisons).map(([symbol, comparison]) => (
+              <div key={symbol} className={`p-4 rounded-lg ${theme === 'dark' ? 'bg-gray-900' : 'bg-white'}`}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className={`font-medium ${currentTheme.text}`}>{comparison.benchmark_name}</span>
+                  <span className={`text-2xl font-bold ${
+                    comparison.beta > 1.2 ? 'text-red-400' :
+                    comparison.beta > 0.8 ? 'text-yellow-400' :
+                    'text-green-400'
+                  }`}>
+                    {comparison.beta.toFixed(3)}
+                  </span>
+                </div>
+                <p className={`text-xs ${currentTheme.textSecondary}`}>
+                  {comparison.beta_interpretation}
+                </p>
+                <p className={`text-xs ${currentTheme.textSecondary} mt-1`}>
+                  Alpha: {formatPercentage(comparison.alpha)}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Performance Metrics Summary */}
+      <div className={`${currentTheme.cardBg} rounded-lg p-6 border ${currentTheme.border}`}>
+        <h3 className={`text-lg font-semibold ${currentTheme.text} mb-4`}>Key Insights</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <h4 className={`text-sm font-medium ${currentTheme.text}`}>Risk-Adjusted Performance</h4>
+            <ul className={`text-sm ${currentTheme.textSecondary} space-y-1`}>
+              {Object.entries(comparisonData.comparisons).map(([symbol, comparison]) => (
+                <li key={symbol} className="flex items-center">
+                  <CheckCircle className="w-4 h-4 text-green-400 mr-2" />
+                  <span>
+                    {comparison.benchmark_name}: Alpha {formatPercentage(comparison.alpha)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          
+          <div className="space-y-2">
+            <h4 className={`text-sm font-medium ${currentTheme.text}`}>Diversification Score</h4>
+            <p className={`text-sm ${currentTheme.textSecondary}`}>
+              Your portfolio shows {
+                Object.values(comparisonData.comparisons).some(c => Math.abs(c.correlation) < 0.3)
+                  ? 'good diversification'
+                  : 'moderate correlation'
+              } with major benchmarks, indicating {
+                Object.values(comparisonData.comparisons).every(c => c.beta < 1.2)
+                  ? 'controlled risk levels'
+                  : 'higher volatility exposure'
+              }.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 
 // Admin Accounting Dashboard Component
 const AccountingDashboard = ({ user }) => {
