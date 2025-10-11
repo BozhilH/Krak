@@ -2984,6 +2984,524 @@ const PortfolioAnalytics = ({ setCurrentView }) => {
 };
 
 // ============================================
+// Financial Reports Export Component (Phase 3)
+// ============================================
+
+const FinancialReports = ({ userId, selectedTimeframe, theme }) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportFormat, setExportFormat] = useState('pdf');
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2
+    }).format(amount);
+  };
+
+  const formatPercentage = (value) => {
+    return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
+  };
+
+  const themeConfig = {
+    dark: {
+      bg: 'bg-gray-900',
+      cardBg: 'bg-gray-800',
+      border: 'border-gray-700',
+      text: 'text-white',
+      textSecondary: 'text-gray-400',
+      accent: 'bg-teal-600',
+      accentHover: 'hover:bg-teal-700',
+    },
+    light: {
+      bg: 'bg-white',
+      cardBg: 'bg-blue-50',
+      border: 'border-blue-200',
+      text: 'text-gray-900',
+      textSecondary: 'text-gray-600',
+      accent: 'bg-blue-600',
+      accentHover: 'hover:bg-blue-700',
+    }
+  };
+
+  const currentTheme = themeConfig[theme];
+
+  const generatePDFReport = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Fetch report data from backend
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const response = await fetch(`${backendUrl}/api/v1/reports/financial/export`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          report_type: 'pdf',
+          scope: 'user',
+          time_range: selectedTimeframe
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch report data');
+      const reportData = await response.json();
+
+      // Import jsPDF
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      // Company Header
+      doc.setFillColor(20, 184, 166); // Teal color
+      doc.rect(0, 0, 210, 40, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(24);
+      doc.setFont(undefined, 'bold');
+      doc.text('CryptoOX', 20, 20);
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'normal');
+      doc.text('Portfolio Financial Report', 20, 30);
+
+      // Report Metadata
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(10);
+      doc.text(`Report ID: ${reportData.report_metadata.report_id}`, 150, 50);
+      doc.text(`Generated: ${new Date(reportData.report_metadata.generated_at).toLocaleString()}`, 150, 55);
+      doc.text(`Period: ${new Date(reportData.report_metadata.start_date).toLocaleDateString()} - ${new Date(reportData.report_metadata.end_date).toLocaleDateString()}`, 150, 60);
+
+      let yPos = 70;
+
+      // Portfolio Summary
+      doc.setFontSize(14);
+      doc.setFont(undefined, 'bold');
+      doc.text('Portfolio Summary', 20, yPos);
+      yPos += 10;
+
+      doc.setFontSize(10);
+      doc.setFont(undefined, 'normal');
+      const summaryData = [
+        ['Total Balance', formatCurrency(reportData.portfolio_summary.total_balance)],
+        ['Total P&L', formatCurrency(reportData.portfolio_summary.total_pnl)],
+        ['P&L Percentage', formatPercentage(reportData.portfolio_summary.pnl_percentage)],
+        ['Realized P&L', formatCurrency(reportData.portfolio_summary.realized_pnl)],
+        ['Unrealized P&L', formatCurrency(reportData.portfolio_summary.unrealized_pnl)],
+        ['Number of Holdings', reportData.portfolio_summary.holdings_count.toString()]
+      ];
+
+      summaryData.forEach(([label, value]) => {
+        doc.text(label, 25, yPos);
+        doc.text(value, 150, yPos, { align: 'right' });
+        yPos += 7;
+      });
+
+      yPos += 10;
+
+      // Holdings Table
+      doc.setFontSize(14);
+      doc.setFont(undefined, 'bold');
+      doc.text('Holdings Detail', 20, yPos);
+      yPos += 10;
+
+      doc.autoTable({
+        startY: yPos,
+        head: [['Asset', 'Amount', 'Value', 'P&L', 'Allocation']],
+        body: reportData.holdings.slice(0, 10).map(h => [
+          h.asset,
+          h.amount.toFixed(4),
+          formatCurrency(h.value_usd),
+          formatCurrency(h.profit_loss),
+          h.percentage.toFixed(2) + '%'
+        ]),
+        theme: 'striped',
+        headStyles: { fillColor: [20, 184, 166] },
+        margin: { left: 20, right: 20 }
+      });
+
+      yPos = doc.lastAutoTable.finalY + 15;
+
+      // Trading Summary (new page if needed)
+      if (yPos > 240) {
+        doc.addPage();
+        yPos = 20;
+      }
+
+      doc.setFontSize(14);
+      doc.setFont(undefined, 'bold');
+      doc.text('Trading Summary', 20, yPos);
+      yPos += 10;
+
+      doc.setFontSize(10);
+      doc.setFont(undefined, 'normal');
+      const tradingData = [
+        ['Total Trades', reportData.trading_summary.total_trades.toString()],
+        ['Buy Trades', reportData.trading_summary.buy_trades.toString()],
+        ['Sell Trades', reportData.trading_summary.sell_trades.toString()],
+        ['Total Volume', formatCurrency(reportData.trading_summary.total_volume)],
+        ['Average Trade Size', formatCurrency(reportData.trading_summary.avg_trade_size)],
+        ['Largest Trade', formatCurrency(reportData.trading_summary.largest_trade)]
+      ];
+
+      tradingData.forEach(([label, value]) => {
+        doc.text(label, 25, yPos);
+        doc.text(value, 150, yPos, { align: 'right' });
+        yPos += 7;
+      });
+
+      yPos += 10;
+
+      // Fees Breakdown
+      doc.setFontSize(14);
+      doc.setFont(undefined, 'bold');
+      doc.text('Fees & Costs', 20, yPos);
+      yPos += 10;
+
+      doc.autoTable({
+        startY: yPos,
+        head: [['Category', 'Amount']],
+        body: [
+          ['Trading Fees', formatCurrency(reportData.fees_breakdown.trading_fees.total)],
+          ['Withdrawal Fees', formatCurrency(reportData.fees_breakdown.withdrawal_fees.total)],
+          ['Deposit Fees', formatCurrency(reportData.fees_breakdown.deposit_fees.total)],
+          ['Total Fees', formatCurrency(reportData.fees_breakdown.total_fees)]
+        ],
+        theme: 'striped',
+        headStyles: { fillColor: [20, 184, 166] },
+        margin: { left: 20, right: 20 }
+      });
+
+      yPos = doc.lastAutoTable.finalY + 15;
+
+      // Staking Income
+      if (yPos > 220) {
+        doc.addPage();
+        yPos = 20;
+      }
+
+      doc.setFontSize(14);
+      doc.setFont(undefined, 'bold');
+      doc.text('Staking Income', 20, yPos);
+      yPos += 10;
+
+      doc.autoTable({
+        startY: yPos,
+        head: [['Asset', 'Amount', 'APR']],
+        body: reportData.staking_income.by_asset.map(s => [
+          s.asset,
+          formatCurrency(s.amount),
+          s.apr.toFixed(2) + '%'
+        ]),
+        theme: 'striped',
+        headStyles: { fillColor: [20, 184, 166] },
+        margin: { left: 20, right: 20 }
+      });
+
+      yPos = doc.lastAutoTable.finalY + 15;
+
+      // Financial Summary
+      if (yPos > 220) {
+        doc.addPage();
+        yPos = 20;
+      }
+
+      doc.setFontSize(16);
+      doc.setFont(undefined, 'bold');
+      doc.setFillColor(240, 240, 240);
+      doc.rect(20, yPos - 5, 170, 50, 'F');
+      doc.text('Financial Summary', 25, yPos + 5);
+      yPos += 15;
+
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'normal');
+      const totalsData = [
+        ['Gross Income (Staking)', formatCurrency(reportData.totals.gross_income)],
+        ['Total Fees Paid', formatCurrency(reportData.totals.total_fees_paid)],
+        ['Net P&L (Trading)', formatCurrency(reportData.totals.net_pnl)],
+        ['Net Income', formatCurrency(reportData.totals.net_income)]
+      ];
+
+      totalsData.forEach(([label, value], index) => {
+        if (index === totalsData.length - 1) {
+          doc.setFont(undefined, 'bold');
+        }
+        doc.text(label, 30, yPos);
+        doc.text(value, 180, yPos, { align: 'right' });
+        yPos += 8;
+      });
+
+      // Footer
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(128, 128, 128);
+        doc.text(`Page ${i} of ${pageCount}`, 105, 290, { align: 'center' });
+        doc.text('© 2025 CryptoOX. All rights reserved.', 105, 295, { align: 'center' });
+      }
+
+      // Save PDF
+      doc.save(`CryptoOX_Financial_Report_${reportData.report_metadata.report_id}.pdf`);
+      setShowExportModal(false);
+
+    } catch (err) {
+      console.error('Error generating PDF:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const generateCSVReport = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Fetch report data
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const response = await fetch(`${backendUrl}/api/v1/reports/financial/export`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          report_type: 'csv',
+          scope: 'user',
+          time_range: selectedTimeframe
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch report data');
+      const reportData = await response.json();
+
+      // Generate CSV content
+      let csv = 'CryptoOX Financial Report\n';
+      csv += `Report ID:,${reportData.report_metadata.report_id}\n`;
+      csv += `Generated:,${new Date(reportData.report_metadata.generated_at).toLocaleString()}\n`;
+      csv += `Period:,${new Date(reportData.report_metadata.start_date).toLocaleDateString()} - ${new Date(reportData.report_metadata.end_date).toLocaleDateString()}\n`;
+      csv += '\n';
+
+      // Portfolio Summary
+      csv += 'Portfolio Summary\n';
+      csv += 'Metric,Value\n';
+      csv += `Total Balance,${reportData.portfolio_summary.total_balance}\n`;
+      csv += `Total P&L,${reportData.portfolio_summary.total_pnl}\n`;
+      csv += `P&L Percentage,${reportData.portfolio_summary.pnl_percentage}%\n`;
+      csv += `Realized P&L,${reportData.portfolio_summary.realized_pnl}\n`;
+      csv += `Unrealized P&L,${reportData.portfolio_summary.unrealized_pnl}\n`;
+      csv += '\n';
+
+      // Holdings
+      csv += 'Holdings Detail\n';
+      csv += 'Asset,Amount,Value USD,Avg Buy Price,Current Price,P&L,P&L %,Allocation %\n';
+      reportData.holdings.forEach(h => {
+        csv += `${h.asset},${h.amount},${h.value_usd},${h.avg_buy_price},${h.current_price},${h.profit_loss},${h.profit_loss_percentage},${h.percentage}\n`;
+      });
+      csv += '\n';
+
+      // Trading Summary
+      csv += 'Trading Summary\n';
+      csv += 'Metric,Value\n';
+      csv += `Total Trades,${reportData.trading_summary.total_trades}\n`;
+      csv += `Buy Trades,${reportData.trading_summary.buy_trades}\n`;
+      csv += `Sell Trades,${reportData.trading_summary.sell_trades}\n`;
+      csv += `Total Volume,${reportData.trading_summary.total_volume}\n`;
+      csv += '\n';
+
+      // Fees
+      csv += 'Fees & Costs\n';
+      csv += 'Category,Amount\n';
+      csv += `Trading Fees,${reportData.fees_breakdown.trading_fees.total}\n`;
+      csv += `Withdrawal Fees,${reportData.fees_breakdown.withdrawal_fees.total}\n`;
+      csv += `Deposit Fees,${reportData.fees_breakdown.deposit_fees.total}\n`;
+      csv += `Total Fees,${reportData.fees_breakdown.total_fees}\n`;
+      csv += '\n';
+
+      // Staking
+      csv += 'Staking Income\n';
+      csv += 'Asset,Amount,APR %\n';
+      reportData.staking_income.by_asset.forEach(s => {
+        csv += `${s.asset},${s.amount},${s.apr}\n`;
+      });
+      csv += '\n';
+
+      // Daily Data
+      csv += 'Daily Aggregation\n';
+      csv += 'Date,Trades,Volume,Fees Paid,P&L,Staking Rewards\n';
+      reportData.daily_aggregation.forEach(d => {
+        csv += `${d.date},${d.trades_count},${d.volume.toFixed(2)},${d.fees_paid.toFixed(2)},${d.pnl.toFixed(2)},${d.staking_rewards.toFixed(2)}\n`;
+      });
+      csv += '\n';
+
+      // Totals
+      csv += 'Financial Summary\n';
+      csv += 'Category,Amount\n';
+      csv += `Gross Income,${reportData.totals.gross_income}\n`;
+      csv += `Total Fees Paid,${reportData.totals.total_fees_paid}\n`;
+      csv += `Net P&L,${reportData.totals.net_pnl}\n`;
+      csv += `Net Income,${reportData.totals.net_income}\n`;
+
+      // Download CSV
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `CryptoOX_Financial_Report_${reportData.report_metadata.report_id}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+      setShowExportModal(false);
+
+    } catch (err) {
+      console.error('Error generating CSV:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExport = () => {
+    if (exportFormat === 'pdf') {
+      generatePDFReport();
+    } else {
+      generateCSVReport();
+    }
+  };
+
+  return (
+    <div className="mt-8">
+      {/* Export Button */}
+      <div className={`${currentTheme.cardBg} rounded-lg p-6 border ${currentTheme.border}`}>
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className={`text-lg font-semibold ${currentTheme.text}`}>Financial Reports</h3>
+            <p className={`text-sm ${currentTheme.textSecondary} mt-1`}>
+              Export comprehensive financial reports with portfolio data, trading history, and fee analysis
+            </p>
+          </div>
+          <button
+            onClick={() => setShowExportModal(true)}
+            className={`${currentTheme.accent} ${currentTheme.accentHover} text-white px-6 py-3 rounded-lg font-medium flex items-center`}
+          >
+            <Download className="w-5 h-5 mr-2" />
+            Export Report
+          </button>
+        </div>
+
+        {error && (
+          <div className="mt-4 p-4 bg-red-900 bg-opacity-20 border border-red-500 rounded-lg flex items-center text-red-400">
+            <AlertCircle className="w-5 h-5 mr-2" />
+            <span>{error}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Export Modal */}
+      {showExportModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className={`${currentTheme.cardBg} rounded-lg p-6 max-w-md w-full mx-4 border ${currentTheme.border}`}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className={`text-xl font-semibold ${currentTheme.text}`}>Export Financial Report</h3>
+              <button
+                onClick={() => setShowExportModal(false)}
+                className={`${currentTheme.textSecondary} hover:${currentTheme.text}`}
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className={`block text-sm font-medium ${currentTheme.text} mb-2`}>
+                  Export Format
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setExportFormat('pdf')}
+                    className={`p-4 rounded-lg border-2 transition-all ${
+                      exportFormat === 'pdf'
+                        ? 'border-teal-500 bg-teal-500 bg-opacity-10'
+                        : `border-gray-600 ${currentTheme.cardBg}`
+                    }`}
+                  >
+                    <FileText className={`w-8 h-8 mx-auto mb-2 ${exportFormat === 'pdf' ? 'text-teal-400' : currentTheme.textSecondary}`} />
+                    <p className={`text-sm font-medium ${currentTheme.text}`}>PDF</p>
+                    <p className={`text-xs ${currentTheme.textSecondary}`}>Formatted report</p>
+                  </button>
+
+                  <button
+                    onClick={() => setExportFormat('csv')}
+                    className={`p-4 rounded-lg border-2 transition-all ${
+                      exportFormat === 'csv'
+                        ? 'border-teal-500 bg-teal-500 bg-opacity-10'
+                        : `border-gray-600 ${currentTheme.cardBg}`
+                    }`}
+                  >
+                    <Database className={`w-8 h-8 mx-auto mb-2 ${exportFormat === 'csv' ? 'text-teal-400' : currentTheme.textSecondary}`} />
+                    <p className={`text-sm font-medium ${currentTheme.text}`}>CSV</p>
+                    <p className={`text-xs ${currentTheme.textSecondary}`}>Spreadsheet data</p>
+                  </button>
+                </div>
+              </div>
+
+              <div className={`p-4 rounded-lg ${theme === 'dark' ? 'bg-gray-900' : 'bg-white'}`}>
+                <h4 className={`text-sm font-medium ${currentTheme.text} mb-2`}>Report includes:</h4>
+                <ul className={`text-sm ${currentTheme.textSecondary} space-y-1`}>
+                  <li className="flex items-center">
+                    <CheckCircle className="w-4 h-4 text-green-400 mr-2" />
+                    Portfolio summary & holdings
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="w-4 h-4 text-green-400 mr-2" />
+                    Trading activity & volume
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="w-4 h-4 text-green-400 mr-2" />
+                    Fees & costs breakdown
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="w-4 h-4 text-green-400 mr-2" />
+                    Staking income details
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="w-4 h-4 text-green-400 mr-2" />
+                    Daily aggregation data
+                  </li>
+                </ul>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => setShowExportModal(false)}
+                  className={`flex-1 px-4 py-2 rounded-lg border ${currentTheme.border} ${currentTheme.text} hover:bg-gray-700`}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleExport}
+                  disabled={loading}
+                  className={`flex-1 px-4 py-2 rounded-lg ${currentTheme.accent} ${currentTheme.accentHover} text-white font-medium flex items-center justify-center`}
+                >
+                  {loading ? (
+                    <RefreshCw className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <>
+                      <Download className="w-5 h-5 mr-2" />
+                      Export {exportFormat.toUpperCase()}
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ============================================
 // Comparative Analytics Component (Phase 2)
 // ============================================
 
