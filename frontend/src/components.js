@@ -5700,7 +5700,7 @@ const Header = ({ currentView, setCurrentView, setSelectedPair, marketData }) =>
     { id: 'portfolio', label: 'Portfolio', icon: Wallet },
     { id: 'analytics', label: 'Analytics', icon: PieChart },
     { id: 'atm-locator', label: 'ATM Locator', icon: MapPin },
-    { id: 'tax-reports', label: 'Tax Reports', icon: FileSpreadsheet }
+    { id: 'tax-reports', label: 'Tax Reports', icon: FileText }
   ];
 
   // Close dropdowns when clicking outside
