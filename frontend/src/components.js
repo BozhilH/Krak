@@ -2941,6 +2941,13 @@ const PortfolioAnalytics = ({ setCurrentView }) => {
           theme={theme}
         />
 
+        {/* Financial Reports Export - Phase 3 */}
+        <FinancialReports 
+          userId={userId}
+          selectedTimeframe={selectedTimeframe}
+          theme={theme}
+        />
+
         {/* Trading Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
           <div className={`${currentTheme.cardBg} rounded-lg p-6 border ${currentTheme.border}`}>
